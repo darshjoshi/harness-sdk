@@ -6,6 +6,7 @@ import { MockSnapshotStorage } from '../../__fixtures__/mock-storage-provider.js
 import { collectGenerator } from '../../__fixtures__/model-test-helpers.js'
 import { createCancellableAgent } from '../../__fixtures__/agent-helpers.js'
 import { AfterNodeCallEvent, BeforeNodeCallEvent, MultiAgentInitializedEvent } from '../events.js'
+import type { AgentResult } from '../../types/agent.js'
 import { ReasoningBlock, TextBlock, type ContentBlockData } from '../../types/messages.js'
 import { Status, MultiAgentState } from '../state.js'
 import { AgentNode, MultiAgentNode } from '../nodes.js'
@@ -17,7 +18,72 @@ function makeAgent(id: string, text = 'reply'): Agent {
   return new Agent({ model, printer: false, id })
 }
 
+class GatedFirstSnapshotStorage extends MockSnapshotStorage {
+  readonly committedGenerations: number[] = []
+  readonly firstWriteStarted: Promise<void>
+  private _markFirstWriteStarted!: () => void
+  private readonly _firstWriteRelease: Promise<void>
+  private _releaseFirstWrite!: () => void
+  private _writeCount = 0
+
+  constructor() {
+    super()
+    this.firstWriteStarted = new Promise<void>((resolve) => {
+      this._markFirstWriteStarted = resolve
+    })
+    this._firstWriteRelease = new Promise<void>((resolve) => {
+      this._releaseFirstWrite = resolve
+    })
+  }
+
+  releaseFirstWrite(): void {
+    this._releaseFirstWrite()
+  }
+
+  override async saveSnapshot(params: Parameters<MockSnapshotStorage['saveSnapshot']>[0]): Promise<void> {
+    this._writeCount++
+    if (this._writeCount === 1) {
+      this._markFirstWriteStarted()
+      await this._firstWriteRelease
+    }
+
+    await super.saveSnapshot(params)
+    const state = params.snapshot.data.state as { results: unknown[] }
+    this.committedGenerations.push(state.results.length)
+  }
+}
+
 describe('Graph', () => {
+  describe('snapshot persistence', () => {
+    it('commits parallel-node snapshots without regressing the persisted frontier', async () => {
+      // Mirrors strands-py/tests/strands/multiagent/test_graph.py and guards
+      // https://github.com/strands-agents/harness-sdk/issues/4397.
+      const storage = new GatedFirstSnapshotStorage()
+      const right = createCancellableAgent('right', 0)
+      right.invoke = async () => {
+        await storage.firstWriteStarted
+        storage.releaseFirstWrite()
+        return {
+          stopReason: 'endTurn',
+          lastMessage: { role: 'assistant', content: [new TextBlock('right done')] },
+        } as AgentResult
+      }
+      const graph = new Graph({
+        id: 'parallel-snapshot-graph',
+        nodes: [makeAgent('left', 'left done'), right],
+        edges: [],
+        sessionManager: new SessionManager({
+          sessionId: 'parallel-snapshot-session',
+          storage: { snapshot: storage },
+        }),
+      })
+
+      const result = await graph.invoke('run both nodes')
+
+      expect(result.status).toBe(Status.COMPLETED)
+      expect(storage.committedGenerations).toStrictEqual([1, 2, 2])
+    })
+  })
   describe('constructor', () => {
     it('defaults id to "graph"', () => {
       const graph = new Graph({
