@@ -4,7 +4,7 @@ This is the lookup layer for the Strands harness factory (`create_harness` in Py
 
 | Python | TypeScript | Default | Purpose |
 | --- | --- | --- | --- |
-| `model` | `model` | `bedrock/global.anthropic.claude-opus-4-8` | A `provider/name` string, a bare Amazon Bedrock id, or a `Model` instance. See [choose a model](/docs/user-guide/harness/configure/model/index.md). |
+| `model` | `model` | `bedrock/global.anthropic.claude-opus-5` | A `provider/name` string, a bare Amazon Bedrock id, or a `Model` instance. See [choose a model](/docs/user-guide/harness/configure/model/index.md). |
 | `effort` | `effort` | `"auto"` | Reasoning effort: `"auto"`, `"low"`, `"medium"`, `"high"`, or off. Ignored for a `Model` instance. |
 | `instructions` | `instructions` | none | A domain block appended after the harness contract. Ignored when a full system prompt is passed. |
 | `tools` | `tools` | none | Consumer tools, added alongside the built-ins. See [add tools](/docs/user-guide/harness/configure/tools-and-instructions/index.md). |

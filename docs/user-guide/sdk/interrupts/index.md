@@ -417,6 +417,35 @@ Strands enforces the following rules for tool interrupts:
 -   A single tool can raise multiple interrupts but only one at a time
     -   In other words, within a single tool, you can interrupt, respond to that interrupt, and then proceed to interrupt again.
 -   When an interrupt fires mid-batch, completed tool results are preserved so the agent skips the model call on resume and only executes remaining tools
+-   When no response exists yet, `context.interrupt()` throws an [`InterruptError`](/docs/api/typescript/InterruptError/index.md), which the agent loop catches to pause. If your tool catches errors around the call, re-throw `InterruptError`:
+
+```typescript
+import { tool, InterruptError } from '@strands-agents/sdk'
+import { z } from 'zod'
+
+const deleteFiles = tool({
+  name: 'delete_files',
+  description: 'Delete files at the given paths',
+  inputSchema: z.object({ paths: z.array(z.string()) }),
+  callback: (input, context) => {
+    try {
+      const approval = context!.interrupt<string>({
+        name: 'myapp-approval',
+        reason: { paths: input.paths },
+      })
+      if (approval.toLowerCase() !== 'y') return false
+
+      // Implementation here
+
+      return true
+    } catch (error) {
+      // Let the agent pause for the interrupt; handle every other error here.
+      if (error instanceof InterruptError) throw error
+      return false
+    }
+  },
+})
+```
 (( /tab "TypeScript" ))
 
 ## Session Management

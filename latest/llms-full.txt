@@ -20093,7 +20093,7 @@ For a provider Strands harness does not have an alias for, or for a model you ha
 from strands.models import BedrockModel
 from strands_harness import create_harness
 
-model = BedrockModel(model_id="global.anthropic.claude-opus-4-8", region_name="us-west-2")
+model = BedrockModel(model_id="global.anthropic.claude-opus-5", region_name="us-west-2")
 agent = create_harness(model=model)
 ```
 (( /tab "Python" ))
@@ -20103,7 +20103,7 @@ agent = create_harness(model=model)
 import { BedrockModel } from '@strands-agents/sdk'
 import { createHarness } from '@strands-agents/harness'
 
-const model = new BedrockModel({ modelId: 'global.anthropic.claude-opus-4-8' })
+const model = new BedrockModel({ modelId: 'global.anthropic.claude-opus-5' })
 const agent = await createHarness({ model })
 ```
 (( /tab "TypeScript" ))
@@ -20123,7 +20123,7 @@ An unknown provider prefix fails at construction with the list of supported prov
 ```python
 from strands_harness import create_harness
 
-agent = create_harness(model="anthropic/claude-opus-4-8", effort="high")
+agent = create_harness(model="anthropic/claude-opus-5", effort="high")
 ```
 (( /tab "Python" ))
 
@@ -20131,7 +20131,7 @@ agent = create_harness(model="anthropic/claude-opus-4-8", effort="high")
 ```typescript
 import { createHarness } from '@strands-agents/harness'
 
-const agent = await createHarness({ model: 'anthropic/claude-opus-4-8', effort: 'high' })
+const agent = await createHarness({ model: 'anthropic/claude-opus-5', effort: 'high' })
 ```
 (( /tab "TypeScript" ))
 (( /tab "Strands harness" ))
@@ -20879,7 +20879,7 @@ Strands harness runs on the model of your choice and supports model providers ac
 Even a one-line call has a shell, file tools, and web access working out of the box. Strands harness can search the web, compare what it finds, and save the results to a file.
 
 (( tab "Amazon Bedrock" ))
-Bedrock is the default, using Claude Opus 4.8 in the region your AWS configuration selects.
+Bedrock is the default, using Claude Opus 5 in the region your AWS configuration selects.
 
 (( tab "Python" ))
 ```python
@@ -21063,7 +21063,7 @@ This is the lookup layer for the Strands harness factory (`create_harness` in Py
 
 | Python | TypeScript | Default | Purpose |
 | --- | --- | --- | --- |
-| `model` | `model` | `bedrock/global.anthropic.claude-opus-4-8` | A `provider/name` string, a bare Amazon Bedrock id, or a `Model` instance. See [choose a model](/docs/user-guide/harness/configure/model/index.md). |
+| `model` | `model` | `bedrock/global.anthropic.claude-opus-5` | A `provider/name` string, a bare Amazon Bedrock id, or a `Model` instance. See [choose a model](/docs/user-guide/harness/configure/model/index.md). |
 | `effort` | `effort` | `"auto"` | Reasoning effort: `"auto"`, `"low"`, `"medium"`, `"high"`, or off. Ignored for a `Model` instance. |
 | `instructions` | `instructions` | none | A domain block appended after the harness contract. Ignored when a full system prompt is passed. |
 | `tools` | `tools` | none | Consumer tools, added alongside the built-ins. See [add tools](/docs/user-guide/harness/configure/tools-and-instructions/index.md). |
@@ -40446,6 +40446,35 @@ Strands enforces the following rules for tool interrupts:
 -   A single tool can raise multiple interrupts but only one at a time
     -   In other words, within a single tool, you can interrupt, respond to that interrupt, and then proceed to interrupt again.
 -   When an interrupt fires mid-batch, completed tool results are preserved so the agent skips the model call on resume and only executes remaining tools
+-   When no response exists yet, `context.interrupt()` throws an [`InterruptError`](/docs/api/typescript/InterruptError/index.md), which the agent loop catches to pause. If your tool catches errors around the call, re-throw `InterruptError`:
+
+```typescript
+import { tool, InterruptError } from '@strands-agents/sdk'
+import { z } from 'zod'
+
+const deleteFiles = tool({
+  name: 'delete_files',
+  description: 'Delete files at the given paths',
+  inputSchema: z.object({ paths: z.array(z.string()) }),
+  callback: (input, context) => {
+    try {
+      const approval = context!.interrupt<string>({
+        name: 'myapp-approval',
+        reason: { paths: input.paths },
+      })
+      if (approval.toLowerCase() !== 'y') return false
+
+      // Implementation here
+
+      return true
+    } catch (error) {
+      // Let the agent pause for the interrupt; handle every other error here.
+      if (error instanceof InterruptError) throw error
+      return false
+    }
+  },
+})
+```
 (( /tab "TypeScript" ))
 
 ## Session Management

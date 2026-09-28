@@ -591,6 +591,7 @@
 - [InjectionContext](https://strandsagents.com/docs/api/typescript/InjectionContext/index.md)
 - [InjectionTrigger](https://strandsagents.com/docs/api/typescript/InjectionTrigger/index.md)
 - [Interrupt](https://strandsagents.com/docs/api/typescript/Interrupt/index.md)
+- [InterruptError](https://strandsagents.com/docs/api/typescript/InterruptError/index.md)
 - [InterruptEvent](https://strandsagents.com/docs/api/typescript/InterruptEvent/index.md)
 - [InterruptParams](https://strandsagents.com/docs/api/typescript/InterruptParams/index.md)
 - [InterruptResponse](https://strandsagents.com/docs/api/typescript/InterruptResponse/index.md)

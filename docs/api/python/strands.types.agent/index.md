@@ -8,7 +8,7 @@ This module defines the types used for an Agent.
 class LocalAgent(Protocol)
 ```
 
-Defined in: [src/strands/types/agent.py:30](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L30)
+Defined in: [src/strands/types/agent.py:35](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L35)
 
 Interface for SDK-provided agents with locally accessible capabilities.
 
@@ -25,6 +25,7 @@ This protocol is exported for type annotations and is not intended for external 
 -   `model` - Model used by the agent.
 -   `system_prompt` - String representation of the agent’s system prompt.
 -   `tool_registry` - Registry containing tools available to the agent.
+-   `event_loop_metrics` - Aggregated metrics for the agent’s loop execution.
 
 #### tool
 
@@ -33,7 +34,7 @@ This protocol is exported for type annotations and is not intended for external 
 def tool() -> _ToolCaller
 ```
 
-Defined in: [src/strands/types/agent.py:61](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L61)
+Defined in: [src/strands/types/agent.py:68](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L68)
 
 Caller for invoking registered tools directly.
 
@@ -44,7 +45,7 @@ Caller for invoking registered tools directly.
 def tool_names() -> list[str]
 ```
 
-Defined in: [src/strands/types/agent.py:66](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L66)
+Defined in: [src/strands/types/agent.py:73](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L73)
 
 Names of tools registered with the agent.
 
@@ -55,7 +56,7 @@ Names of tools registered with the agent.
 def system_prompt_content() -> list[SystemContentBlock] | None
 ```
 
-Defined in: [src/strands/types/agent.py:71](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L71)
+Defined in: [src/strands/types/agent.py:78](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L78)
 
 Structured system prompt content used by the agent.
 
@@ -66,9 +67,53 @@ Structured system prompt content used by the agent.
 def session_id() -> str
 ```
 
-Defined in: [src/strands/types/agent.py:76](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L76)
+Defined in: [src/strands/types/agent.py:83](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L83)
 
 Identifier for the current conversation session.
+
+#### storage
+
+```python
+@property
+def storage() -> Storage | None
+```
+
+Defined in: [src/strands/types/agent.py:88](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L88)
+
+Default storage backend for agent subsystems.
+
+#### sandbox
+
+```python
+@property
+def sandbox() -> Sandbox
+```
+
+Defined in: [src/strands/types/agent.py:93](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L93)
+
+Execution environment for running commands, code, and file operations.
+
+#### context\_manager
+
+```python
+@property
+def context_manager() -> ContextManager | None
+```
+
+Defined in: [src/strands/types/agent.py:98](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L98)
+
+The ContextManager plugin, if one is registered on this agent.
+
+#### cancel\_signal
+
+```python
+@property
+def cancel_signal() -> threading.Event
+```
+
+Defined in: [src/strands/types/agent.py:103](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L103)
+
+The cancellation signal for the current invocation.
 
 #### add\_hook
 
@@ -79,7 +124,7 @@ def add_hook(callback: HookCallback[_TEvent],
              order: float = ...) -> None
 ```
 
-Defined in: [src/strands/types/agent.py:80](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L80)
+Defined in: [src/strands/types/agent.py:107](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L107)
 
 Register a hook callback.
 
@@ -93,7 +138,7 @@ def take_snapshot(*,
                   app_data: dict[str, Any] | None = None) -> Snapshot
 ```
 
-Defined in: [src/strands/types/agent.py:90](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L90)
+Defined in: [src/strands/types/agent.py:117](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L117)
 
 Capture current agent state as an in-memory snapshot.
 
@@ -105,7 +150,7 @@ The fields a preset captures, and the fields accepted by include and exclude, ar
 def load_snapshot(snapshot: Snapshot) -> None
 ```
 
-Defined in: [src/strands/types/agent.py:105](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L105)
+Defined in: [src/strands/types/agent.py:132](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L132)
 
 Restore agent state from a previously captured snapshot.
 
@@ -117,7 +162,7 @@ Only fields present in snapshot.data are restored; absent fields are left unchan
 class Limits(TypedDict)
 ```
 
-Defined in: [src/strands/types/agent.py:113](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L113)
+Defined in: [src/strands/types/agent.py:140](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L140)
 
 Per-invocation budget caps for the agent loop.
 
@@ -139,7 +184,7 @@ Priority on simultaneous trip (highest first): `turns`, `total_tokens`, `output_
 class ConcurrentInvocationMode(str, Enum)
 ```
 
-Defined in: [src/strands/types/agent.py:155](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L155)
+Defined in: [src/strands/types/agent.py:182](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py#L182)
 
 Mode controlling concurrent invocation behavior.
 

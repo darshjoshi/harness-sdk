@@ -37,6 +37,7 @@
     -   [HookRegistry](/docs/api/typescript/HookRegistry/index.md)
     -   [ImageBlock](/docs/api/typescript/ImageBlock/index.md)
     -   [InitializedEvent](/docs/api/typescript/InitializedEvent/index.md)
+    -   [InterruptError](/docs/api/typescript/InterruptError/index.md)
     -   [InterruptEvent](/docs/api/typescript/InterruptEvent/index.md)
     -   [InterruptResponseContent](/docs/api/typescript/InterruptResponseContent/index.md)
     -   [IntervalTrigger](/docs/api/typescript/IntervalTrigger/index.md)

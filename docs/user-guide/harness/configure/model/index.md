@@ -47,7 +47,7 @@ For a provider Strands harness does not have an alias for, or for a model you ha
 from strands.models import BedrockModel
 from strands_harness import create_harness
 
-model = BedrockModel(model_id="global.anthropic.claude-opus-4-8", region_name="us-west-2")
+model = BedrockModel(model_id="global.anthropic.claude-opus-5", region_name="us-west-2")
 agent = create_harness(model=model)
 ```
 (( /tab "Python" ))
@@ -57,7 +57,7 @@ agent = create_harness(model=model)
 import { BedrockModel } from '@strands-agents/sdk'
 import { createHarness } from '@strands-agents/harness'
 
-const model = new BedrockModel({ modelId: 'global.anthropic.claude-opus-4-8' })
+const model = new BedrockModel({ modelId: 'global.anthropic.claude-opus-5' })
 const agent = await createHarness({ model })
 ```
 (( /tab "TypeScript" ))
@@ -77,7 +77,7 @@ An unknown provider prefix fails at construction with the list of supported prov
 ```python
 from strands_harness import create_harness
 
-agent = create_harness(model="anthropic/claude-opus-4-8", effort="high")
+agent = create_harness(model="anthropic/claude-opus-5", effort="high")
 ```
 (( /tab "Python" ))
 
@@ -85,7 +85,7 @@ agent = create_harness(model="anthropic/claude-opus-4-8", effort="high")
 ```typescript
 import { createHarness } from '@strands-agents/harness'
 
-const agent = await createHarness({ model: 'anthropic/claude-opus-4-8', effort: 'high' })
+const agent = await createHarness({ model: 'anthropic/claude-opus-5', effort: 'high' })
 ```
 (( /tab "TypeScript" ))
 (( /tab "Strands harness" ))
