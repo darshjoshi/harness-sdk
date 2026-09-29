@@ -276,9 +276,8 @@ class SnapshotSessionManager(SessionManager):
         # Orchestrator ids restored this process, so restore runs once per orchestrator (lazily,
         # on its first invocation) rather than on every invocation.
         self._multi_agent_restored_ids: set[str] = set()
-        # Locks are event-loop-bound, and synchronous invocations run on fresh loops.
-        self._multi_agent_save_locks: dict[str, asyncio.Lock] = {}
-        self._multi_agent_save_lock_loop: asyncio.AbstractEventLoop | None = None
+        # Each orchestrator rebinds independently because synchronous invocations use fresh event loops.
+        self._multi_agent_save_locks: dict[str, tuple[asyncio.AbstractEventLoop, asyncio.Lock]] = {}
         self._agent_stash: Stash | None = None
 
     @property
@@ -353,15 +352,11 @@ class SnapshotSessionManager(SessionManager):
     def _get_multi_agent_save_lock(self, orchestrator_id: str) -> asyncio.Lock:
         """Return the active event loop's save lock for an orchestrator."""
         running_loop = asyncio.get_running_loop()
-        if self._multi_agent_save_lock_loop is not running_loop:
-            self._multi_agent_save_locks.clear()
-            self._multi_agent_save_lock_loop = running_loop
-
-        lock = self._multi_agent_save_locks.get(orchestrator_id)
-        if lock is None:
-            lock = asyncio.Lock()
-            self._multi_agent_save_locks[orchestrator_id] = lock
-        return lock
+        entry = self._multi_agent_save_locks.get(orchestrator_id)
+        if entry is None or entry[0] is not running_loop:
+            entry = (running_loop, asyncio.Lock())
+            self._multi_agent_save_locks[orchestrator_id] = entry
+        return entry[1]
 
     async def _save_multi_agent_latest(self, orchestrator: "MultiAgentBase") -> None:
         """Capture the orchestrator and overwrite its ``snapshot_latest``."""

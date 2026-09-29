@@ -140,6 +140,60 @@ def test_swarm_snapshot_is_persisted_after_run(storage):
     assert _deserialize_snapshot(raw).data["state"]["type"] == "swarm"
 
 
+@pytest.mark.asyncio
+async def test_multi_agent_save_locks_rebind_per_orchestrator() -> None:
+    """One orchestrator's loop rebind does not replace another's active save lock.
+
+    Guards https://github.com/strands-agents/harness-sdk/issues/4397.
+    """
+
+    class _GatedOrchestratorStorage(InMemoryStorage):
+        def __init__(self) -> None:
+            super().__init__()
+            self.committed_generations: list[int] = []
+            self.first_write_started = asyncio.Event()
+            self.release_first_write = asyncio.Event()
+            self._target_write_count = 0
+
+        async def write(self, key: str, data: bytes) -> None:
+            if "/graph-a/" not in key:
+                await super().write(key, data)
+                return
+
+            self._target_write_count += 1
+            if self._target_write_count == 1:
+                self.first_write_started.set()
+                await asyncio.wait_for(self.release_first_write.wait(), timeout=1)
+
+            await super().write(key, data)
+            snapshot = _deserialize_snapshot(data)
+            self.committed_generations.append(snapshot.data["state"]["generation"])
+
+    storage = _GatedOrchestratorStorage()
+    manager = SnapshotSessionManager("mm", storage=storage)
+    orchestrator_a = Mock()
+    orchestrator_a.id = "graph-a"
+    orchestrator_a.serialize_state.side_effect = [{"generation": 1}, {"generation": 2}]
+    orchestrator_b = Mock()
+    orchestrator_b.id = "graph-b"
+    orchestrator_b.serialize_state.return_value = {"generation": 1}
+
+    first_save = asyncio.create_task(manager._save_multi_agent_latest(orchestrator_a))
+    await asyncio.wait_for(storage.first_write_started.wait(), timeout=1)
+
+    def save_other_orchestrator() -> None:
+        asyncio.run(manager._save_multi_agent_latest(orchestrator_b))
+
+    await asyncio.to_thread(save_other_orchestrator)
+    second_save = asyncio.create_task(manager._save_multi_agent_latest(orchestrator_a))
+    asyncio.get_running_loop().call_soon(storage.release_first_write.set)
+    await asyncio.gather(first_save, second_save)
+
+    tru_generations = storage.committed_generations
+    exp_generations = [1, 2]
+    assert tru_generations == exp_generations
+
+
 def test_interrupted_graph_restores_before_applying_response(storage, agenerator):
     """A fresh Graph applies an interrupt response after restoring the persisted interrupt state."""
     interrupt = Interrupt(id="approval", name="approval", reason="approval required")
