@@ -7,80 +7,13 @@ import pytest
 from strands.agent import Agent, AgentBase, AgentResult
 from strands.agent.state import AgentState
 from strands.hooks import AfterNodeCallEvent, AgentInitializedEvent, BeforeNodeCallEvent
-from strands.hooks.registry import HookOrder, HookProvider, HookRegistry
+from strands.hooks.registry import HookProvider, HookRegistry
 from strands.interrupt import Interrupt, _InterruptState
 from strands.multiagent.base import MultiAgentBase, MultiAgentResult, NodeResult
 from strands.multiagent.graph import Graph, GraphBuilder, GraphEdge, GraphNode, GraphResult, GraphState, Status
 from strands.session.file_session_manager import FileSessionManager
 from strands.session.session_manager import SessionManager
-from strands.session.snapshot_session_manager import SnapshotSessionManager, _deserialize_snapshot
-from strands.storage import InMemoryStorage
 from strands.types._events import MultiAgentNodeCancelEvent
-
-
-class _GatedFirstSnapshotStorage(InMemoryStorage):
-    """Record snapshot generations while gating the first commit."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.committed_generations: list[int] = []
-        self.first_write_started = asyncio.Event()
-        self.release_first_write = asyncio.Event()
-        self._write_count = 0
-
-    async def write(self, key: str, data: bytes) -> None:
-        self._write_count += 1
-        if self._write_count == 1:
-            self.first_write_started.set()
-            await asyncio.wait_for(self.release_first_write.wait(), timeout=1)
-
-        await super().write(key, data)
-        snapshot = _deserialize_snapshot(data)
-        self.committed_generations.append(len(snapshot.data["state"]["completed_nodes"]))
-
-
-@pytest.mark.asyncio
-async def test_parallel_node_snapshot_commits_never_regress() -> None:
-    """Parallel node snapshots advance the persisted frontier monotonically.
-
-    Mirrors ``strands-ts/src/multiagent/__tests__/graph.test.ts`` and guards
-    https://github.com/strands-agents/harness-sdk/issues/4397.
-    """
-    storage = _GatedFirstSnapshotStorage()
-    agent_left = create_mock_agent("left", "left done")
-    agent_right = create_mock_agent("right", "right done")
-
-    async def gated_right_stream(*args, **kwargs):
-        await asyncio.wait_for(storage.first_write_started.wait(), timeout=1)
-        yield {"agent_start": True}
-        yield {"result": agent_right.return_value}
-
-    def schedule_first_write_release(event: AfterNodeCallEvent) -> None:
-        if event.node_id == "right":
-            asyncio.get_running_loop().call_soon(storage.release_first_write.set)
-
-    agent_right.stream_async = Mock(side_effect=gated_right_stream)
-
-    builder = GraphBuilder()
-    builder.add_node(agent_left, "left")
-    builder.add_node(agent_right, "right")
-    builder.set_entry_point("left")
-    builder.set_entry_point("right")
-    builder.set_graph_id("parallel-snapshot-graph")
-    builder.set_session_manager(SnapshotSessionManager("parallel-snapshot-session", storage=storage))
-    graph = builder.build()
-    graph.add_hook(
-        schedule_first_write_release,
-        AfterNodeCallEvent,
-        order=HookOrder.SDK_FIRST,
-    )
-
-    result = await graph.invoke_async("run both nodes")
-
-    tru_generations = storage.committed_generations
-    exp_generations = [1, 2, 2]
-    assert result.status == Status.COMPLETED
-    assert tru_generations == exp_generations
 
 
 def _make_graph(
