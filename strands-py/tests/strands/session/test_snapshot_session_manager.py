@@ -104,8 +104,7 @@ class _GatedFirstSnapshotStorage(InMemoryStorage):
 async def test_parallel_node_snapshot_commits_never_regress() -> None:
     """Parallel node snapshots advance the persisted frontier monotonically.
 
-    Mirrors ``strands-ts/src/multiagent/__tests__/graph.test.ts`` and guards
-    https://github.com/strands-agents/harness-sdk/issues/4397.
+    Guards https://github.com/strands-agents/harness-sdk/issues/4397.
     """
     storage = _GatedFirstSnapshotStorage()
     agent_left = Agent(model=_model("left done"), agent_id="left")
