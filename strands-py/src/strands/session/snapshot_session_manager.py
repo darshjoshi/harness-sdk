@@ -350,7 +350,10 @@ class SnapshotSessionManager(SessionManager):
         return True
 
     def _get_multi_agent_save_lock(self, orchestrator_id: str) -> asyncio.Lock:
-        """Return the active event loop's save lock for an orchestrator."""
+        """Return the active event loop's save lock for an orchestrator.
+
+        An orchestrator must not run concurrently across loops because its execution state is shared.
+        """
         running_loop = asyncio.get_running_loop()
         entry = self._multi_agent_save_locks.get(orchestrator_id)
         if entry is None or entry[0] is not running_loop:
