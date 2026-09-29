@@ -22,6 +22,7 @@ from strands.experimental.bidi.models.openai import (
     _RESTART_INSTRUCTION,
     OPENAI_MAX_TIMEOUT_S,
     OPENAI_PROACTIVE_RECONNECT_MARGIN_S,
+    _SessionState,
 )
 from strands.experimental.bidi.types import (
     AudioDelta,
@@ -33,6 +34,12 @@ from strands.experimental.bidi.types import (
     BidiMessage,
     BidiResponseStartEvent,
     BidiResponseStopEvent,
+    BidiTextBlockEvent,
+    BidiTextDeltaEvent,
+    BidiTextStartEvent,
+    BidiTextStopEvent,
+    BidiToolUseBlocksEvent,
+    BidiTranscriptBlockEvent,
     BidiTranscriptDeltaEvent,
     BidiTranscriptStartEvent,
     BidiTranscriptStopEvent,
@@ -130,8 +137,8 @@ async def test_receive_preserves_native_order_with_late_transcription(model, moc
         BidiResponseStopEvent("r2"),
         BidiTranscriptStartEvent("user", content_id="user-2"),
         BidiTranscriptDeltaEvent("Hi", "user", content_id="user-2"),
-        BidiTranscriptStopEvent("Hi", "user", content_id="user-2"),
-        BidiTranscriptStopEvent("Earlier input.", "user", content_id="user-1"),
+        BidiTranscriptStopEvent("user", content_id="user-2"),
+        BidiTranscriptStopEvent("user", content_id="user-1"),
     ]
 
     await model.start()
@@ -140,7 +147,7 @@ async def test_receive_preserves_native_order_with_late_transcription(model, moc
         tru_events = [await anext(reader) for _ in exp_events]
         assert tru_events == exp_events
         assert model._session_state.active_responses == set()
-        assert model._session_state.started_transcripts == set()
+        assert model._session_state.started_transcripts == {}
     finally:
         await reader.aclose()
         await model.stop()
@@ -680,13 +687,8 @@ async def test_receive_lifecycle_events(mock_websocket, model):
     tru_events = [await anext(receiver) for _ in range(3)]
     exp_events = [
         BidiConnectionStartEvent(connection_id=model._connection_id, model="updated-model"),
-        BidiAudioStartEvent(),
-        BidiAudioDeltaEvent(
-            audio="",
-            format="pcm",
-            sample_rate=24000,
-            channels=1,
-        ),
+        BidiAudioStartEvent(content_id=unittest.mock.ANY),
+        BidiAudioDeltaEvent(audio="", format="pcm", sample_rate=24000, channels=1, content_id=unittest.mock.ANY),
     ]
     assert tru_events == exp_events
 
@@ -725,33 +727,52 @@ async def test_receive_transcription_failure(mock_websocket, model, committed):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("second_item_id,second_content_index", [("item-2", 0), ("item-1", 1)])
 @pytest.mark.parametrize("status", ["completed", "cancelled", "failed"])
-async def test_receive_combines_assistant_content_in_one_transcript(
-    model, mock_websocket, second_item_id, second_content_index, status
+@pytest.mark.parametrize("output_type", ["audio_transcript", "text"])
+@pytest.mark.parametrize("stream_deltas", [False, True])
+async def test_receive_combines_assistant_content(
+    model, mock_websocket, second_item_id, second_content_index, status, output_type, stream_deltas
 ):
-    """Native content parts stream immediately and complete one assistant transcript."""
+    """Native content parts stream immediately and complete one assistant message."""
     native_events = [{"type": "response.created", "response": {"id": "r1"}}]
     contents = [("item-1", 0, "Let me explain."), (second_item_id, second_content_index, "Here is the answer.")]
+    text_field = "transcript" if output_type == "audio_transcript" else "text"
+    content_type = "output_audio" if output_type == "audio_transcript" else "output_text"
     output_items = {}
     for item_id, content_index, text in contents:
         identity = {"response_id": "r1", "item_id": item_id, "content_index": content_index}
-        native_events.extend(
-            [
-                {"type": "response.output_audio_transcript.delta", **identity, "delta": text},
-                {"type": "response.output_audio_transcript.done", **identity, "transcript": text},
-            ]
-        )
+        if stream_deltas:
+            native_events.extend(
+                [
+                    {"type": f"response.output_{output_type}.delta", **identity, "delta": text},
+                    {"type": f"response.output_{output_type}.done", **identity, text_field: text},
+                ]
+            )
         item = output_items.setdefault(item_id, {"id": item_id, "type": "message", "role": "assistant", "content": []})
-        item["content"].append({"type": "output_audio", "transcript": text})
+        item["content"].append({"type": content_type, text_field: text})
     native_events.append(
         {"type": "response.done", "response": {"id": "r1", "status": status, "output": list(output_items.values())}}
+    )
+    final_text = "Let me explain.\n\nHere is the answer."
+    deltas = ["Let me explain.", "\n\nHere is the answer."] if stream_deltas else [final_text]
+    exp_content_events = (
+        [
+            BidiTranscriptStartEvent("assistant", "r1"),
+            *[BidiTranscriptDeltaEvent(delta, "assistant", "r1") for delta in deltas],
+            BidiTranscriptStopEvent("assistant", "r1"),
+            BidiTranscriptBlockEvent(final_text, "assistant", "r1"),
+        ]
+        if output_type == "audio_transcript"
+        else [
+            BidiTextStartEvent("r1:text"),
+            *[BidiTextDeltaEvent(delta, "r1:text") for delta in deltas],
+            BidiTextStopEvent("r1:text"),
+            BidiTextBlockEvent(final_text, "r1:text"),
+        ]
     )
     exp_events = [
         BidiConnectionStartEvent(unittest.mock.ANY, model.model_id),
         BidiResponseStartEvent("r1"),
-        BidiTranscriptStartEvent("assistant", "r1"),
-        BidiTranscriptDeltaEvent("Let me explain.", "assistant", "r1"),
-        BidiTranscriptDeltaEvent("\n\nHere is the answer.", "assistant", "r1"),
-        BidiTranscriptStopEvent("Let me explain.\n\nHere is the answer.", "assistant", "r1"),
+        *exp_content_events,
         BidiResponseStopEvent("r1"),
     ]
     incoming = asyncio.Queue()
@@ -765,10 +786,22 @@ async def test_receive_combines_assistant_content_in_one_transcript(
         receiver = agent.receive()
         tru_events = [await asyncio.wait_for(anext(receiver), timeout=2) for _ in exp_events]
         assert tru_events == exp_events
-        assert [message["content"] for message in agent.messages] == [
-            [{"text": "Let me explain.\n\nHere is the answer."}]
+        tru_messages = agent.messages
+        exp_messages = [
+            {
+                "role": "assistant",
+                "content": [{"text": final_text}],
+                "metadata": {
+                    "custom": {
+                        "bidi": {"kind": "text" if output_type == "text" else "transcript", "status": "complete"}
+                    }
+                },
+                "tracking_id": unittest.mock.ANY,
+            }
         ]
-        assert model._session_state.started_transcripts == set()
+        assert tru_messages == exp_messages
+        assert model._session_state.started_transcripts == {}
+        assert model._session_state.assistant_parts == {}
     finally:
         await agent.stop()
 
@@ -795,37 +828,22 @@ async def test_event_conversion(model):
     audio_event = {"type": "response.output_audio.delta", "delta": base64.b64encode(b"audio_data").decode()}
     converted = model._convert_openai_event(audio_event)
     assert converted == [
-        BidiAudioStartEvent(),
-        BidiAudioDeltaEvent(base64.b64encode(b"audio_data").decode(), format="pcm", sample_rate=24000, channels=1),
+        BidiAudioStartEvent(content_id=unittest.mock.ANY),
+        BidiAudioDeltaEvent(
+            base64.b64encode(b"audio_data").decode(),
+            format="pcm",
+            sample_rate=24000,
+            channels=1,
+            content_id=unittest.mock.ANY,
+        ),
     ]
 
-    # Test function call sequence
-    item_added = {
-        "type": "response.output_item.added",
-        "item": {"type": "function_call", "call_id": "call-123", "name": "calculator"},
-    }
-    model._convert_openai_event(item_added)
-
-    args_delta = {
-        "type": "response.function_call_arguments.delta",
-        "call_id": "call-123",
-        "delta": '{"expression": "2+2"}',
-    }
-    model._convert_openai_event(args_delta)
-
-    args_done = {"type": "response.function_call_arguments.done", "call_id": "call-123"}
-    converted = model._convert_openai_event(args_done)
-    # Now returns list with ToolUseStreamEvent
-    assert isinstance(converted, list)
-    assert len(converted) == 1
-    # ToolUseStreamEvent has delta and current_tool_use, not a "type" field
-    assert "delta" in converted[0]
-    assert "toolUse" in converted[0]["delta"]
-    tool_use = converted[0]["delta"]["toolUse"]
-    assert tool_use["toolUseId"] == "call-123"
-    assert tool_use["name"] == "calculator"
-    assert json.loads(tool_use["input"]) == {"expression": "2+2"}
-    assert converted[0]["current_tool_use"]["input"] == {"expression": "2+2"}
+    for event_type in (
+        "response.output_item.added",
+        "response.function_call_arguments.delta",
+        "response.function_call_arguments.done",
+    ):
+        assert model._convert_openai_event({"type": event_type}) is None
 
     speech_started = {"type": "input_audio_buffer.speech_started", "item_id": "speech"}
     tru_events = model._convert_openai_event(speech_started)
@@ -856,21 +874,27 @@ async def test_event_conversion(model):
 
 
 @pytest.mark.parametrize(
-    ("event", "expected"),
+    ("event", "exp_events"),
     [
         pytest.param(
             {"type": "response.output_text.delta", "delta": "Hello from OpenAI", "response_id": "response-1"},
-            BidiTranscriptDeltaEvent("Hello from OpenAI", "assistant", content_id="response-1"),
+            [
+                BidiTextStartEvent("response-1:text"),
+                BidiTextDeltaEvent("Hello from OpenAI", "response-1:text"),
+            ],
             id="output_text_delta",
         ),
         pytest.param(
             {"type": "response.output_audio_transcript.delta", "delta": "Spoken response", "response_id": "response-1"},
-            BidiTranscriptDeltaEvent("Spoken response", "assistant", content_id="response-1"),
+            [
+                BidiTranscriptStartEvent("assistant", "response-1"),
+                BidiTranscriptDeltaEvent("Spoken response", "assistant", "response-1"),
+            ],
             id="output_audio_transcript_delta",
         ),
         pytest.param(
             {"type": "response.output_text.delta", "delta": " ", "response_id": "response-1"},
-            BidiTranscriptDeltaEvent(" ", "assistant", content_id="response-1"),
+            [BidiTextStartEvent("response-1:text"), BidiTextDeltaEvent(" ", "response-1:text")],
             id="whitespace_output_text_delta",
         ),
         pytest.param(
@@ -898,12 +922,15 @@ async def test_event_conversion(model):
                 "delta": "User question",
                 "item_id": "input-1",
             },
-            BidiTranscriptDeltaEvent("User question", "user", content_id="input-1"),
+            [
+                BidiTranscriptStartEvent("user", "input-1"),
+                BidiTranscriptDeltaEvent("User question", "user", "input-1"),
+            ],
             id="input_audio_transcription_delta",
         ),
         pytest.param(
             {"type": "conversation.item.input_audio_transcription.delta", "delta": " ", "item_id": "input-1"},
-            BidiTranscriptDeltaEvent(" ", "user", content_id="input-1"),
+            [BidiTranscriptStartEvent("user", "input-1"), BidiTranscriptDeltaEvent(" ", "user", "input-1")],
             id="whitespace_input_audio_transcription_delta",
         ),
         pytest.param(
@@ -912,12 +939,16 @@ async def test_event_conversion(model):
                 "transcript": "User question",
                 "item_id": "input-1",
             },
-            BidiTranscriptStopEvent("User question", "user", content_id="input-1"),
+            [
+                BidiTranscriptStartEvent("user", "input-1"),
+                BidiTranscriptDeltaEvent("User question", "user", "input-1"),
+                BidiTranscriptStopEvent("user", "input-1"),
+            ],
             id="input_audio_transcription_completed",
         ),
         pytest.param(
             {"type": "conversation.item.input_audio_transcription.completed", "transcript": "", "item_id": "input-1"},
-            BidiTranscriptStopEvent("", "user", content_id="input-1"),
+            [BidiTranscriptStartEvent("user", "input-1"), BidiTranscriptStopEvent("user", "input-1")],
             id="empty_input_audio_transcription_completed",
         ),
         pytest.param(
@@ -926,7 +957,10 @@ async def test_event_conversion(model):
                 "segment": {"text": "User question", "role": "user"},
                 "item_id": "input-1",
             },
-            BidiTranscriptDeltaEvent("User question", "user", content_id="input-1"),
+            [
+                BidiTranscriptStartEvent("user", "input-1"),
+                BidiTranscriptDeltaEvent("User question", "user", "input-1"),
+            ],
             id="input_audio_transcription_segment",
         ),
         pytest.param(
@@ -935,19 +969,86 @@ async def test_event_conversion(model):
                 "segment": {"text": " ", "role": "user"},
                 "item_id": "input-1",
             },
-            BidiTranscriptDeltaEvent(" ", "user", content_id="input-1"),
+            [BidiTranscriptStartEvent("user", "input-1"), BidiTranscriptDeltaEvent(" ", "user", "input-1")],
             id="whitespace_input_audio_transcription_segment",
         ),
     ],
 )
-def test_convert_openai_event_transcript(model, event, expected):
+def test_convert_openai_event_text_and_transcript(model, event, exp_events):
     if event["type"].startswith("response."):
         event = {**event, "item_id": "item-1", "content_index": 0}
     tru_events = model._convert_openai_event(event)
-    exp_events = (
-        [BidiTranscriptStartEvent(expected.role, content_id=expected.content_id), expected] if expected else None
-    )
     assert tru_events == exp_events
+    if event["type"] == "conversation.item.input_audio_transcription.completed":
+        assert model._session_state.started_transcripts == {}
+
+
+@pytest.mark.parametrize("stream_deltas", [False, True])
+def test_convert_openai_event_keeps_text_separate_from_transcripts(model, stream_deltas):
+    if stream_deltas:
+        tru_events = []
+        for output_type, content_index, delta in [
+            ("text", 0, "Written"),
+            ("audio_transcript", 1, "Spoken"),
+            ("text", 0, " answer."),
+            ("audio_transcript", 1, " answer."),
+        ]:
+            tru_events.extend(
+                model._convert_openai_event(
+                    {
+                        "type": f"response.output_{output_type}.delta",
+                        "response_id": "r1",
+                        "item_id": "item-1",
+                        "content_index": content_index,
+                        "delta": delta,
+                    }
+                )
+            )
+        exp_events = [
+            BidiTextStartEvent("r1:text"),
+            BidiTextDeltaEvent("Written", "r1:text"),
+            BidiTranscriptStartEvent("assistant", "r1"),
+            BidiTranscriptDeltaEvent("Spoken", "assistant", "r1"),
+            BidiTextDeltaEvent(" answer.", "r1:text"),
+            BidiTranscriptDeltaEvent(" answer.", "assistant", "r1"),
+        ]
+        assert tru_events == exp_events
+    tru_events = model._convert_openai_event(
+        {
+            "type": "response.done",
+            "response": {
+                "id": "r1",
+                "output": [
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [
+                            {"type": "output_text", "text": "Written answer."},
+                            {"type": "output_audio", "transcript": "Spoken answer."},
+                        ],
+                    }
+                ],
+            },
+        }
+    )
+    exp_events = [
+        *(
+            [BidiTranscriptStartEvent("assistant", "r1"), BidiTranscriptDeltaEvent("Spoken answer.", "assistant", "r1")]
+            if not stream_deltas
+            else []
+        ),
+        BidiTranscriptStopEvent("assistant", "r1"),
+        *(
+            [BidiTextStartEvent("r1:text"), BidiTextDeltaEvent("Written answer.", "r1:text")]
+            if not stream_deltas
+            else []
+        ),
+        BidiTextStopEvent("r1:text"),
+        BidiResponseStopEvent("r1"),
+    ]
+    assert tru_events == exp_events
+    assert model._session_state.started_transcripts == {}
+    assert model._session_state.assistant_parts == {}
 
 
 # Helper Method Tests
@@ -1225,8 +1326,10 @@ def test__convert_openai_event_audio_format(model_id, api_key, voice):
 
     tru_events = model._convert_openai_event({"type": "response.output_audio.delta", "delta": audio_base64})
     exp_events = [
-        BidiAudioStartEvent(),
-        BidiAudioDeltaEvent(audio=audio_base64, format="pcm", sample_rate=24000, channels=1),
+        BidiAudioStartEvent(content_id=unittest.mock.ANY),
+        BidiAudioDeltaEvent(
+            audio=audio_base64, format="pcm", sample_rate=24000, channels=1, content_id=unittest.mock.ANY
+        ),
     ]
     assert tru_events == exp_events
 
@@ -1250,17 +1353,89 @@ def test_audio_boundaries(model, native_start, native_stop, status):
     native_events.append({"type": "response.done", "response": {"id": "r1", "status": status}})
 
     tru_events = [event for native in native_events for event in model._convert_openai_event(native) or []]
+    content_id = tru_events[1].content_id
+    assert isinstance(content_id, str)
     exp_events = [
         BidiResponseStartEvent("r1"),
-        BidiAudioStartEvent(),
-        BidiAudioDeltaEvent("YQ==", format="pcm", sample_rate=24000, channels=1),
-        BidiAudioDeltaEvent("Yg==", format="pcm", sample_rate=24000, channels=1),
-        BidiAudioStopEvent(),
+        BidiAudioStartEvent(content_id),
+        BidiAudioDeltaEvent("YQ==", format="pcm", sample_rate=24000, channels=1, content_id=content_id),
+        BidiAudioDeltaEvent("Yg==", format="pcm", sample_rate=24000, channels=1, content_id=content_id),
+        BidiAudioStopEvent(content_id),
         BidiResponseStopEvent("r1"),
     ]
     assert tru_events == exp_events
     assert model._convert_openai_event({"type": "response.output_audio.done", "response_id": "r1"}) is None
-    assert model._session_state.audio_responses == set()
+    assert model._session_state.audio_content_ids == {}
+
+
+def test_audio_ids_distinguish_overlapping_and_reopened_streams(model):
+    def delta(response_id):
+        return model._convert_openai_event(
+            {"type": "response.output_audio.delta", "response_id": response_id, "delta": "YQ=="}
+        )
+
+    first_events = delta("r1")
+    second_events = delta("r2")
+    first_id = first_events[0].content_id
+    second_id = second_events[0].content_id
+    assert first_id != second_id
+    assert first_events == [
+        BidiAudioStartEvent(first_id),
+        BidiAudioDeltaEvent("YQ==", "pcm", 24000, 1, first_id),
+    ]
+    assert second_events == [
+        BidiAudioStartEvent(second_id),
+        BidiAudioDeltaEvent("YQ==", "pcm", 24000, 1, second_id),
+    ]
+    assert delta("r1") == [BidiAudioDeltaEvent("YQ==", "pcm", 24000, 1, first_id)]
+    assert model._convert_openai_event({"type": "response.output_audio.done", "response_id": "r1"}) == [
+        BidiAudioStopEvent(first_id)
+    ]
+    next_events = delta("r1")
+    next_id = next_events[0].content_id
+    assert next_id not in {first_id, second_id}
+    assert next_events == [
+        BidiAudioStartEvent(next_id),
+        BidiAudioDeltaEvent("YQ==", "pcm", 24000, 1, next_id),
+    ]
+    assert model._convert_openai_event({"type": "response.done", "response": {"id": "r2"}}) == [
+        BidiAudioStopEvent(second_id),
+        BidiResponseStopEvent("r2"),
+    ]
+    assert model._convert_openai_event({"type": "response.done", "response": {"id": "r1"}}) == [
+        BidiAudioStopEvent(next_id),
+        BidiResponseStopEvent("r1"),
+    ]
+    assert model._session_state.audio_content_ids == {}
+
+
+@pytest.mark.parametrize(
+    ("item_type", "status", "exp_events"),
+    [
+        (
+            "function_call",
+            "completed",
+            [BidiToolUseBlocksEvent([{"toolUseId": "call-123", "name": "calculator", "input": {"expression": "2+2"}}])],
+        ),
+        ("function_call", "incomplete", None),
+        ("message", "completed", None),
+        ("function_call_output", "completed", None),
+    ],
+)
+def test_completed_output_item_emits_tool_call(model, item_type, status, exp_events):
+    native_event = {
+        "type": "response.output_item.done",
+        "item": {
+            "type": item_type,
+            "status": status,
+            "call_id": "call-123",
+            "name": "calculator",
+            "arguments": '{"expression": "2+2"}',
+        },
+    }
+
+    tru_events = model._convert_openai_event(native_event)
+    assert tru_events == exp_events
 
 
 @pytest.mark.parametrize("pending_tools", [set(), {"other-call"}])
@@ -1535,6 +1710,68 @@ async def test_restart_reestablishes_and_replays_history(mock_websockets_connect
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("restart", [True, False])
+async def test_start_resets_connection_state(model, restart):
+    """Only a restart carries outstanding tools into the fresh connection."""
+    await model.start()
+    state = model._session_state
+    state.started_transcripts["transcript"] = True
+    state.assistant_parts["response"] = ("item", 0)
+    state.audio_content_ids["response"] = "audio"
+    state.active_responses.add("response")
+    state.pending_tools.update({"a", "b"})
+    state.pending_input_ids.add("input")
+    state.input_audio_pending = True
+    state.response_pending = True
+    state.response_requested = True
+
+    if restart:
+        await model.restart()
+    else:
+        await model.stop()
+        await model.start()
+
+    exp_state = _SessionState(pending_tools={"a", "b"} if restart else set(), lock=unittest.mock.ANY)
+    assert model._session_state == exp_state
+    assert model._session_state is not state
+    assert model._session_state.pending_tools is not state.pending_tools
+    await model.stop()
+
+
+@pytest.mark.asyncio
+async def test_restart_waits_for_pending_tool_results(model, mock_websocket):
+    """A restarted connection waits for all outstanding results before requesting a response."""
+    await model.start()
+    model._session_state.pending_tools.update({"a", "b"})
+    await model.restart()
+    mock_websocket.send.reset_mock()
+
+    exp_events = []
+    for call_id in ("a", "b"):
+        await model.send(
+            BidiMessage(content=[ToolResultBlock(tool_use_id=call_id, status="success", content=[{"text": call_id}])])
+        )
+        exp_events.append(
+            {
+                "type": "conversation.item.create",
+                "item": {
+                    "id": unittest.mock.ANY,
+                    "type": "function_call_output",
+                    "call_id": call_id,
+                    "output": json.dumps([{"text": call_id}]),
+                },
+            }
+        )
+        if call_id == "b":
+            exp_events.append({"type": "response.create"})
+
+        tru_events = [json.loads(call.args[0]) for call in mock_websocket.send.await_args_list]
+        assert tru_events == exp_events
+
+    await model.stop()
+
+
+@pytest.mark.asyncio
 async def test_restart_forwards_tools(mock_websockets_connect, model, tool_spec):
     """Tools are re-sent on restart so the new session can still call them."""
     _, mock_ws = mock_websockets_connect
@@ -1626,7 +1863,7 @@ async def test_receive_binds_websocket_per_reader(mock_websockets_connect, model
 
     reader = model.receive()
     await reader.__anext__()  # BidiConnectionStartEvent (reader not yet bound to a socket)
-    assert await anext(reader) == BidiAudioStartEvent()
+    assert await anext(reader) == BidiAudioStartEvent(content_id=unittest.mock.ANY)
     first = await anext(reader)
     assert isinstance(first, BidiAudioDeltaEvent)
     assert first.audio == "FROM_WS1"
@@ -1639,7 +1876,9 @@ async def test_receive_binds_websocket_per_reader(mock_websockets_connect, model
     model._websocket = ws2
     blocker.set()
     tru_event = await reader.__anext__()
-    exp_event = BidiAudioDeltaEvent(audio="FROM_WS1", format="pcm", sample_rate=24000, channels=1)
+    exp_event = BidiAudioDeltaEvent(
+        audio="FROM_WS1", format="pcm", sample_rate=24000, channels=1, content_id=unittest.mock.ANY
+    )
     assert tru_event == exp_event
     blocker.clear()
 
@@ -1653,26 +1892,33 @@ async def test_receive_binds_websocket_per_reader(mock_websockets_connect, model
 
 
 @pytest.mark.asyncio
-async def test_tool_results_wait_for_response_and_entire_group(model, mock_websocket):
-    """Submit results immediately, then generate one continuation when the group is ready."""
+async def test_tool_results_wait_for_response_and_pending_tools(model, mock_websocket):
+    """Submit results immediately, then generate one continuation after the remaining calls finish."""
     await model.start()
     mock_websocket.send.reset_mock()
     state = model._session_state
     state.active_responses.add("response-a")
-    state.pending_tools.update(("a", "b"))
     result_a = ToolResultBlock(tool_use_id="a", status="success", content=[{"text": "A"}])
     result_b = ToolResultBlock(tool_use_id="b", status="success", content=[{"text": "B"}])
+    items = [
+        {
+            "type": "function_call",
+            "status": "completed",
+            "call_id": call_id,
+            "name": f"tool_{call_id}",
+            "arguments": "{}",
+        }
+        for call_id in ("a", "b")
+    ]
     mock_websocket.recv.side_effect = [
+        *(json.dumps({"type": "response.output_item.done", "item": item}) for item in items),
         json.dumps(
             {
                 "type": "response.done",
                 "response": {
                     "id": "response-a",
                     "status": "completed",
-                    "output": [
-                        {"type": "function_call", "call_id": "a", "name": "tool_a", "arguments": "{}"},
-                        {"type": "function_call", "call_id": "b", "name": "tool_b", "arguments": "{}"},
-                    ],
+                    "output": items,
                 },
             }
         ),
@@ -1682,6 +1928,8 @@ async def test_tool_results_wait_for_response_and_entire_group(model, mock_webso
     reader = model.receive()
     await anext(reader)  # Connection start.
 
+    assert await anext(reader) == BidiToolUseBlocksEvent([{"toolUseId": "a", "name": "tool_a", "input": {}}])
+    assert await anext(reader) == BidiToolUseBlocksEvent([{"toolUseId": "b", "name": "tool_b", "input": {}}])
     await model.send(BidiMessage(content=[result_b]))
     assert await anext(reader) == BidiResponseStopEvent("response-a")
     await model._flush_response_request(state)
@@ -1757,7 +2005,8 @@ async def test_native_acknowledgments_correlate_inputs_and_late_transcripts(mode
         BidiResponseStartEvent("a"),
         BidiResponseStopEvent("a"),
         BidiResponseStartEvent("b"),
-        BidiTranscriptStopEvent("Earlier speech", "user", content_id="speech"),
+        BidiTranscriptDeltaEvent("Earlier speech", "user", content_id="speech"),
+        BidiTranscriptStopEvent("user", content_id="speech"),
         BidiResponseStopEvent("b"),
     ]
     await model.stop()

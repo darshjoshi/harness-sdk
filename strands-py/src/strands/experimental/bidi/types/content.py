@@ -43,15 +43,15 @@ class BidiMessage:
     content: list[BidiContentBlock]
 
 
-class BidiTranscriptMetadata(TypedDict):
-    """Transcript metadata stored under a message's metadata.custom.bidi.
+class BidiContentMetadata(TypedDict):
+    """Streamed content metadata stored under a message's metadata.custom.bidi.
 
     Attributes:
-        kind: Identifies the message as a transcript.
-        status: Whether the transcript is pending, complete, or incomplete.
+        kind: Identifies the message as text, reasoning, or a transcript.
+        status: Whether the content is pending, complete, or incomplete.
     """
 
-    kind: Literal["transcript"]
+    kind: Literal["text", "reasoning", "transcript"]
     status: Literal["pending", "complete", "incomplete"]
 
 
@@ -60,8 +60,6 @@ class BidiToolMetadata(TypedDict):
 
     Attributes:
         kind: Whether the message records dispatch or the completed result.
-        tool_use_id: Original provider tool-use ID.
     """
 
     kind: Literal["tool_dispatch", "tool_result"]
-    tool_use_id: str

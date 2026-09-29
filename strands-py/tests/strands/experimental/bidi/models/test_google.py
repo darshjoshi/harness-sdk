@@ -10,7 +10,6 @@ Tests the unified GoogleGeminiLiveModel interface including:
 import asyncio
 import base64
 import copy
-import json
 import unittest.mock
 
 import pytest
@@ -27,14 +26,20 @@ from strands.experimental.bidi.types import (
     BidiBargeInEvent,
     BidiConnectionStartEvent,
     BidiMessage,
+    BidiReasoningDeltaEvent,
+    BidiReasoningStartEvent,
+    BidiReasoningStopEvent,
     BidiResponseStartEvent,
     BidiResponseStopEvent,
+    BidiTextDeltaEvent,
+    BidiTextStartEvent,
+    BidiTextStopEvent,
+    BidiToolUseBlocksEvent,
     BidiTranscriptDeltaEvent,
     BidiTranscriptStartEvent,
     BidiTranscriptStopEvent,
     BidiUsageEvent,
 )
-from strands.types._events import ToolUseStreamEvent
 from strands.types.content import TextBlock
 from strands.types.media import ImageBlock
 from strands.types.tools import ToolResultBlock
@@ -124,18 +129,6 @@ def usage_metadata():
             setattr(usage, name, value)
 
         return usage
-
-    return _build
-
-
-@pytest.fixture
-def text_part():
-    """Build a Part-shaped mock carrying text."""
-
-    def _build(text):
-        part = unittest.mock.Mock()
-        part.text = text
-        return part
 
     return _build
 
@@ -417,9 +410,11 @@ async def test_restart_resumes_via_session_handle(mock_genai_client, model, agen
     await anext(old_reader)
     old_start = await anext(old_reader)
     assert await anext(old_reader) == BidiTranscriptDeltaEvent("Before restart", "user", old_start.content_id)
+    assert model._turn_state.input_id == old_start.content_id
 
     await model.restart(system_prompt="hi")
     await old_reader.aclose()
+    assert model._turn_state == _TurnState()
 
     assert mock_live_session_cm.__aexit__.called  # old connection torn down
     assert model._connection_id is not None  # new connection established
@@ -443,7 +438,7 @@ async def test_restart_resumes_via_session_handle(mock_genai_client, model, agen
         assert new_start.content_id != old_start.content_id
         exp_events = [
             BidiTranscriptDeltaEvent("After restart", "user", new_start.content_id),
-            BidiTranscriptStopEvent("After restart", "user", new_start.content_id),
+            BidiTranscriptStopEvent("user", new_start.content_id),
         ]
         tru_events = [await asyncio.wait_for(anext(reader), 1) for _ in exp_events]
         assert tru_events == exp_events
@@ -477,12 +472,15 @@ async def test_fresh_start_clears_tracked_handle(mock_genai_client, model):
     mock_client, _, _ = mock_genai_client
     await model.start()
     model._live_session_handle = "old-session"
+    model._turn_state.tool_names["old-call"] = "lookup"
     await model.stop()
+    assert model._turn_state.tool_names == {}
 
     # A brand-new conversation: start with no handle.
     await model.start()
 
     assert model._live_session_handle is None
+    assert model._turn_state.tool_names == {}
     config = mock_client.aio.live.connect.call_args.kwargs["config"]
     assert config["session_resumption"]["handle"] is None
 
@@ -539,19 +537,20 @@ async def test_restart_falls_back_to_fresh_session_when_resume_rejected(mock_gen
 
 
 @pytest.mark.asyncio
-async def test_turn_state_is_per_reader(mock_genai_client, model, live_message):
-    """Turn bracketing is isolated per reader, so a superseded reader draining its closing session
-    cannot corrupt the turn state of the connection that replaced it.
-    """
-    _, _, _ = mock_genai_client
+async def test_turn_state_is_per_reader(model, live_message):
+    """A superseded reader cannot change the new connection's turns or tool tracking."""
     await model.start()
 
-    old_reader = _TurnState()
-    new_reader = _TurnState()
+    old_reader = model._turn_state
+    await model.restart()
+    new_reader = model._turn_state
 
     # The superseded reader drains a model output from its closing session, opening its own turn.
-    model._convert_gemini_live_event(live_message(data=b"stale_audio"), old_reader)
+    tool_call = genai_types.LiveServerToolCall(function_calls=[{"id": "old-call", "name": "lookup", "args": {}}])
+    model._convert_gemini_live_event(live_message(data=b"stale_audio", tool_call=tool_call), old_reader)
     assert old_reader.response_id is not None
+    assert old_reader.tool_names == {"old-call": "lookup"}
+    assert new_reader == _TurnState()
 
     # The new reader's state is untouched, so its first output still opens a response.
     events = model._convert_gemini_live_event(live_message(data=b"fresh_audio"), new_reader)
@@ -791,6 +790,7 @@ async def test_send_all_content_types(mock_genai_client, model):
     )
 
     # Test tool result
+    model._turn_state.tool_names["tool-123"] = "calculator"
     tool_result = ToolResultBlock(tool_use_id="tool-123", status="success", content=[{"text": "Result: 42"}])
     assert await model.send(BidiMessage(content=[tool_result])) is None
     mock_live_session.send_tool_response.assert_called_once()
@@ -862,7 +862,7 @@ async def test_receive_timeout(mock_genai_client, model, agenerator, live_messag
 
 
 @pytest.mark.asyncio
-async def test_event_conversion(mock_genai_client, model, live_message, server_content, text_part):
+async def test_event_conversion(mock_genai_client, model, live_message, server_content):
     """Test conversion of all Gemini Live event types to standard format."""
     _, _, _ = mock_genai_client
     await model.start()
@@ -870,95 +870,53 @@ async def test_event_conversion(mock_genai_client, model, live_message, server_c
     # not the response-start that a turn's first model output would otherwise prepend.
     turn_state = _TurnState(response_id="r1")
 
-    # Test text output (converted to transcript via model_turn.parts)
-    mock_model_turn = unittest.mock.Mock()
-    mock_model_turn.parts = [text_part("Hello from Gemini")]
+    # Native model text has its own stream.
+    mock_model_turn = genai_types.Content(parts=[genai_types.Part(text="Hello from Gemini")])
     mock_text = live_message(server_content=server_content(model_turn=mock_model_turn))
 
     tru_events = model._convert_gemini_live_event(mock_text, turn_state)
     exp_events = [
-        BidiTranscriptStartEvent("assistant", content_id=unittest.mock.ANY),
-        BidiTranscriptDeltaEvent("Hello from Gemini", "assistant", content_id=unittest.mock.ANY),
+        BidiTextStartEvent(content_id=unittest.mock.ANY),
+        BidiTextDeltaEvent("Hello from Gemini", content_id=unittest.mock.ANY),
     ]
     assert tru_events == exp_events
+    content_id = tru_events[0].content_id
 
-    # Test multiple text parts (should concatenate)
-    mock_model_turn_multi = unittest.mock.Mock()
-    mock_model_turn_multi.parts = [text_part("Hello"), text_part("from Gemini")]
+    # Preserve each part's whitespace.
+    mock_model_turn_multi = genai_types.Content(
+        parts=[genai_types.Part(text="Hello"), genai_types.Part(text=" from Gemini")]
+    )
     mock_multi_text = live_message(server_content=server_content(model_turn=mock_model_turn_multi))
 
-    multi_text_events = model._convert_gemini_live_event(mock_multi_text, turn_state)
-    assert isinstance(multi_text_events, list)
-    assert len(multi_text_events) == 1
-    multi_text_event = multi_text_events[0]
-    assert isinstance(multi_text_event, BidiTranscriptDeltaEvent)
-    assert multi_text_event.delta == "Hello from Gemini"  # Concatenated with space
+    tru_events = model._convert_gemini_live_event(mock_multi_text, turn_state)
+    exp_events = [
+        BidiTextDeltaEvent("Hello", content_id=content_id),
+        BidiTextDeltaEvent(" from Gemini", content_id=content_id),
+    ]
+    assert tru_events == exp_events
     # Test audio output (base64 encoded)
     mock_audio = live_message(data=b"audio_data")
 
     audio_events = model._convert_gemini_live_event(mock_audio, turn_state)
     expected_b64 = base64.b64encode(b"audio_data").decode("utf-8")
     assert audio_events == [
-        BidiAudioStartEvent(),
-        BidiAudioDeltaEvent(expected_b64, format="pcm", sample_rate=24000, channels=1),
+        BidiAudioStartEvent(content_id=unittest.mock.ANY),
+        BidiAudioDeltaEvent(expected_b64, format="pcm", sample_rate=24000, channels=1, content_id=unittest.mock.ANY),
     ]
 
-    # Test single tool call (returns list with one event)
-    mock_func_call = unittest.mock.Mock()
-    mock_func_call.id = "tool-123"
-    mock_func_call.name = "calculator"
-    mock_func_call.args = {"expression": "2+2"}
-
-    mock_tool_call = unittest.mock.Mock()
-    mock_tool_call.function_calls = [mock_func_call]
-
-    mock_tool = live_message(tool_call=mock_tool_call)
-
-    tool_events = model._convert_gemini_live_event(mock_tool, turn_state)
-    # Should return a list of ToolUseStreamEvent
-    assert isinstance(tool_events, list)
-    assert len(tool_events) == 1
-    tool_event = tool_events[0]
-    # ToolUseStreamEvent has delta and current_tool_use, not a "type" field
-    assert "delta" in tool_event
-    assert "toolUse" in tool_event["delta"]
-    assert tool_event["delta"]["toolUse"]["toolUseId"] == "tool-123"
-    assert tool_event["delta"]["toolUse"]["name"] == "calculator"
-    assert tool_event["delta"]["toolUse"]["input"] == json.dumps({"expression": "2+2"})
-    assert tool_event["current_tool_use"]["input"] == {"expression": "2+2"}
-
-    # Test multiple tool calls (returns list with multiple events)
-    mock_func_call_1 = unittest.mock.Mock()
-    mock_func_call_1.id = "tool-123"
-    mock_func_call_1.name = "calculator"
-    mock_func_call_1.args = {"expression": "2+2"}
-
-    mock_func_call_2 = unittest.mock.Mock()
-    mock_func_call_2.id = "tool-456"
-    mock_func_call_2.name = "weather"
-    mock_func_call_2.args = {"location": "Seattle"}
-
-    mock_tool_call_multi = unittest.mock.Mock()
-    mock_tool_call_multi.function_calls = [mock_func_call_1, mock_func_call_2]
-
-    mock_tool_multi = live_message(tool_call=mock_tool_call_multi)
-
-    tool_events_multi = model._convert_gemini_live_event(mock_tool_multi, turn_state)
-    # Should return a list with two ToolUseStreamEvent
-    assert isinstance(tool_events_multi, list)
-    assert len(tool_events_multi) == 2
-
-    # Verify first tool call
-    assert tool_events_multi[0]["delta"]["toolUse"]["toolUseId"] == "tool-123"
-    assert tool_events_multi[0]["delta"]["toolUse"]["name"] == "calculator"
-    assert tool_events_multi[0]["delta"]["toolUse"]["input"] == json.dumps({"expression": "2+2"})
-    assert tool_events_multi[0]["current_tool_use"]["input"] == {"expression": "2+2"}
-
-    # Verify second tool call
-    assert tool_events_multi[1]["delta"]["toolUse"]["toolUseId"] == "tool-456"
-    assert tool_events_multi[1]["delta"]["toolUse"]["name"] == "weather"
-    assert tool_events_multi[1]["delta"]["toolUse"]["input"] == json.dumps({"location": "Seattle"})
-    assert tool_events_multi[1]["current_tool_use"]["input"] == {"location": "Seattle"}
+    calls = [
+        {"id": "tool-123", "name": "calculator", "args": {"expression": "2+2"}},
+        {"id": "tool-456", "name": "weather", "args": {"location": "Seattle"}},
+    ]
+    for group in (calls[:1], calls):
+        message = genai_types.LiveServerMessage(tool_call={"function_calls": group})
+        tru_events = model._convert_gemini_live_event(message, turn_state)
+        exp_events = [
+            BidiToolUseBlocksEvent(
+                [{"toolUseId": call["id"], "name": call["name"], "input": call["args"]} for call in group]
+            )
+        ]
+        assert tru_events == exp_events
 
     # Test barge-in
     mock_barge_in = live_message(server_content=server_content(interrupted=True))
@@ -966,7 +924,7 @@ async def test_event_conversion(mock_genai_client, model, live_message, server_c
     barge_in_events = model._convert_gemini_live_event(mock_barge_in, turn_state)
     assert barge_in_events == [
         BidiBargeInEvent(reason="user_speech"),
-        BidiAudioStopEvent(),
+        BidiAudioStopEvent(content_id=unittest.mock.ANY),
     ]
 
     await model.stop()
@@ -1094,7 +1052,7 @@ def test_barge_in_emitted_alongside_other_server_content(model, complete_with_ou
         BidiBargeInEvent("user_speech"),
         BidiTranscriptStartEvent("assistant", content_id=unittest.mock.ANY),
         BidiTranscriptDeltaEvent("partial reply", "assistant", content_id=unittest.mock.ANY),
-        BidiTranscriptStopEvent("partial reply", "assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("assistant", content_id=unittest.mock.ANY),
         BidiResponseStopEvent(unittest.mock.ANY),
     ]
     assert tru_events == exp_events
@@ -1111,7 +1069,7 @@ def test_barge_in_emitted_alongside_other_server_content(model, complete_with_ou
         BidiResponseStartEvent(unittest.mock.ANY),
         BidiTranscriptStartEvent("assistant", content_id=unittest.mock.ANY),
         BidiTranscriptDeltaEvent("Next reply.", "assistant", content_id=unittest.mock.ANY),
-        BidiTranscriptStopEvent("Next reply.", "assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("assistant", content_id=unittest.mock.ANY),
         BidiResponseStopEvent(unittest.mock.ANY),
     ]
     assert tru_events == exp_events
@@ -1131,74 +1089,50 @@ async def test_barge_in_preserves_user_transcription_already_in_progress(
     first = unittest.mock.Mock(text="Just one", finished=False)
     second = unittest.mock.Mock(text=" second", finished=False)
 
-    model._convert_gemini_live_event(
+    started = model._convert_gemini_live_event(
         live_message(server_content=server_content(input_transcription=first)),
         turn_state,
     )
-    events = model._convert_gemini_live_event(
+    tru_events = model._convert_gemini_live_event(
         live_message(server_content=server_content(interrupted=True, input_transcription=second)),
         turn_state,
     )
-
-    assert [type(event) for event in events] == [BidiBargeInEvent, BidiTranscriptDeltaEvent]
-    assert turn_state.transcripts == {turn_state.input_id: "Just one second"}
+    exp_events = [
+        BidiBargeInEvent("user_speech"),
+        BidiTranscriptDeltaEvent(" second", "user", started[0].content_id),
+    ]
+    assert tru_events == exp_events
 
     await model.stop()
 
 
-@pytest.mark.asyncio
-async def test_transcription_fragments_complete_at_turn_boundary(
-    mock_genai_client,
-    model,
-    live_message,
-    server_content,
-):
-    """Input and output fragments produce complete transcripts at turn completion."""
-    _, _, _ = mock_genai_client
-    await model.start()
+def test_transcription_fragments_complete_at_turn_boundary(model):
     turn_state = _TurnState()
-
-    first_input = unittest.mock.Mock(text="how ", finished=False)
-    second_input = unittest.mock.Mock(text="are you?", finished=False)
-
-    model._convert_gemini_live_event(
-        live_message(server_content=server_content(input_transcription=first_input)),
-        turn_state,
-    )
-    model._convert_gemini_live_event(
-        live_message(server_content=server_content(input_transcription=second_input)),
-        turn_state,
-    )
-
-    assert turn_state.transcripts == {turn_state.input_id: "how are you?"}
-
-    first_output = unittest.mock.Mock(text="I am ", finished=False)
-    second_output = unittest.mock.Mock(text="doing well.", finished=False)
-
-    model._convert_gemini_live_event(
-        live_message(server_content=server_content(output_transcription=first_output)),
-        turn_state,
-    )
-    model._convert_gemini_live_event(
-        live_message(server_content=server_content(output_transcription=second_output)),
-        turn_state,
-    )
-
-    assert turn_state.output_transcript == "I am doing well."
-
-    completed = model._convert_gemini_live_event(
-        live_message(server_content=server_content(turn_complete=True)),
-        turn_state,
-    )
-    assert completed == [
-        BidiTranscriptStopEvent("how are you?", "user", content_id=unittest.mock.ANY),
-        BidiTranscriptStopEvent("I am doing well.", "assistant", content_id=unittest.mock.ANY),
+    contents = [
+        {"input_transcription": {"text": "how "}},
+        {"input_transcription": {"text": "are you?"}},
+        {"output_transcription": {"text": "I am "}},
+        {"output_transcription": {"text": "doing well."}},
+        {"turn_complete": True},
+    ]
+    tru_events = [
+        event
+        for content in contents
+        for event in model._convert_gemini_live_event(genai_types.LiveServerMessage(server_content=content), turn_state)
+    ]
+    exp_events = [
+        BidiTranscriptStartEvent("user", content_id=unittest.mock.ANY),
+        BidiTranscriptDeltaEvent("how ", "user", content_id=unittest.mock.ANY),
+        BidiTranscriptDeltaEvent("are you?", "user", content_id=unittest.mock.ANY),
+        BidiResponseStartEvent(response_id=unittest.mock.ANY),
+        BidiTranscriptStartEvent("assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptDeltaEvent("I am ", "assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptDeltaEvent("doing well.", "assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("user", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("assistant", content_id=unittest.mock.ANY),
         BidiResponseStopEvent(response_id=unittest.mock.ANY),
     ]
-    assert turn_state.transcripts == {}
-    assert turn_state.output_transcript == ""
-
-    await model.stop()
+    assert tru_events == exp_events
 
 
 @pytest.mark.parametrize(
@@ -1208,7 +1142,7 @@ async def test_transcription_fragments_complete_at_turn_boundary(
             False,
             [{"turn_complete": True}],
             [
-                BidiTranscriptStopEvent("Turn one.", "user", content_id=unittest.mock.ANY),
+                BidiTranscriptStopEvent("user", content_id=unittest.mock.ANY),
             ],
             id="input-only",
         ),
@@ -1217,7 +1151,7 @@ async def test_transcription_fragments_complete_at_turn_boundary(
             [{"interrupted": True}, {"turn_complete": True}],
             [
                 BidiBargeInEvent(reason="user_speech"),
-                BidiTranscriptStopEvent("Turn one.", "user", content_id=unittest.mock.ANY),
+                BidiTranscriptStopEvent("user", content_id=unittest.mock.ANY),
                 BidiResponseStopEvent("r1"),
             ],
             id="barge-in-then-complete",
@@ -1227,7 +1161,7 @@ async def test_transcription_fragments_complete_at_turn_boundary(
             [{"interrupted": True, "turn_complete": True}],
             [
                 BidiBargeInEvent(reason="user_speech"),
-                BidiTranscriptStopEvent("Turn one.", "user", content_id=unittest.mock.ANY),
+                BidiTranscriptStopEvent("user", content_id=unittest.mock.ANY),
                 BidiResponseStopEvent("r1"),
             ],
             id="barge-in-and-complete",
@@ -1250,7 +1184,7 @@ def test_convert_gemini_live_event_completes_user_transcript_at_turn_end(model, 
             model._convert_gemini_live_event(genai_types.LiveServerMessage(server_content=ending), turn_state)
         )
     assert tru_events == exp_events
-    assert turn_state.transcripts == {}
+    assert turn_state.input_ids == set()
 
     tru_events = model._convert_gemini_live_event(
         genai_types.LiveServerMessage(
@@ -1261,30 +1195,86 @@ def test_convert_gemini_live_event_completes_user_transcript_at_turn_end(model, 
     exp_events = [
         BidiTranscriptStartEvent("user", content_id=unittest.mock.ANY),
         BidiTranscriptDeltaEvent(delta="Turn two.", role="user", content_id=unittest.mock.ANY),
-        BidiTranscriptStopEvent("Turn two.", "user", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("user", content_id=unittest.mock.ANY),
     ]
     assert tru_events == exp_events
-    assert turn_state.transcripts == {}
+    assert turn_state.input_ids == set()
 
 
-@pytest.mark.asyncio
-async def test_audio_takes_precedence_over_model_turn_text(
-    mock_genai_client, model, live_message, server_content, text_part
-):
-    """Audio output suppresses model_turn text, avoiding a duplicate event for one response."""
-    _, _, _ = mock_genai_client
-    await model.start()
-    turn_state = _TurnState(response_id="r1")  # mid-response, so no response-start is prepended
+def test_convert_gemini_live_event_separates_text_reasoning_and_transcripts(model):
+    state = _TurnState()
+    with unittest.mock.patch(
+        "strands.experimental.bidi.models.google.uuid.uuid4",
+        side_effect=["transcript", "reasoning", "text", "audio", "response"],
+    ):
+        tru_events = model._convert_gemini_live_event(
+            genai_types.LiveServerMessage(
+                server_content={
+                    "output_transcription": {"text": "Spoken answer."},
+                    "model_turn": {
+                        "parts": [
+                            {"text": "Checking", "thought": True},
+                            {"text": " the facts.", "thought": True},
+                            {"text": "Written answer."},
+                            {"inline_data": {"data": b"audio", "mime_type": "audio/pcm"}},
+                        ]
+                    },
+                }
+            ),
+            state,
+        )
+    exp_events = [
+        BidiResponseStartEvent("response"),
+        BidiTranscriptStartEvent("assistant", "transcript"),
+        BidiTranscriptDeltaEvent("Spoken answer.", "assistant", "transcript"),
+        BidiReasoningStartEvent("reasoning"),
+        BidiReasoningDeltaEvent("Checking", "reasoning"),
+        BidiReasoningDeltaEvent(" the facts.", "reasoning"),
+        BidiReasoningStopEvent("reasoning"),
+        BidiTextStartEvent("text"),
+        BidiTextDeltaEvent("Written answer.", "text"),
+        BidiAudioStartEvent("audio"),
+        BidiAudioDeltaEvent(base64.b64encode(b"audio").decode(), "pcm", 24000, 1, "audio"),
+    ]
+    assert tru_events == exp_events
 
-    mock_model_turn = unittest.mock.Mock()
-    mock_model_turn.parts = [text_part("Hello from Gemini")]
-    message = live_message(data=b"audio_data", server_content=server_content(model_turn=mock_model_turn))
+    tru_events = model._convert_gemini_live_event(
+        genai_types.LiveServerMessage(server_content={"turn_complete": True}), state
+    )
+    exp_events = [
+        BidiAudioStopEvent("audio"),
+        BidiTextStopEvent("text"),
+        BidiTranscriptStopEvent("assistant", "transcript"),
+        BidiResponseStopEvent("response"),
+    ]
+    assert tru_events == exp_events
+    assert state == _TurnState()
 
-    events = model._convert_gemini_live_event(message, turn_state)
 
-    assert [type(event) for event in events] == [BidiAudioStartEvent, BidiAudioDeltaEvent]
-
-    await model.stop()
+@pytest.mark.parametrize("thought", [False, True])
+def test_convert_gemini_live_event_brackets_text_only_turns(model, thought):
+    start_event = BidiReasoningStartEvent if thought else BidiTextStartEvent
+    delta_event = BidiReasoningDeltaEvent if thought else BidiTextDeltaEvent
+    stop_event = BidiReasoningStopEvent if thought else BidiTextStopEvent
+    state = _TurnState()
+    tru_events = model._convert_gemini_live_event(
+        genai_types.LiveServerMessage(
+            server_content={
+                "model_turn": {"parts": [{"text": "Hello", "thought": thought}]},
+                "turn_complete": True,
+            }
+        ),
+        state,
+    )
+    exp_events = [
+        BidiResponseStartEvent(unittest.mock.ANY),
+        start_event(unittest.mock.ANY),
+        delta_event("Hello", unittest.mock.ANY),
+        stop_event(unittest.mock.ANY),
+        BidiResponseStopEvent(unittest.mock.ANY),
+    ]
+    assert tru_events == exp_events
+    assert state == _TurnState()
 
 
 @pytest.mark.asyncio
@@ -1356,20 +1346,32 @@ def test_audio_stops_once_at_generation_boundary(model, live_message, server_con
         live_message(server_content=server_content(turn_complete=True)),
     ]
     tru_events = [event for message in messages for event in model._convert_gemini_live_event(message, state)]
+    content_id = tru_events[0].content_id
+    assert isinstance(content_id, str)
     exp_events = [
-        BidiAudioStartEvent(),
-        BidiAudioDeltaEvent("Zmlyc3Q=", format="pcm", sample_rate=24000, channels=1),
+        BidiAudioStartEvent(content_id),
+        BidiAudioDeltaEvent("Zmlyc3Q=", format="pcm", sample_rate=24000, channels=1, content_id=content_id),
     ]
     if ending == "interrupted":
         exp_events.append(BidiBargeInEvent(reason="user_speech"))
     exp_events.extend(
         [
-            BidiAudioDeltaEvent("bGFzdA==", format="pcm", sample_rate=24000, channels=1),
-            BidiAudioStopEvent(),
+            BidiAudioDeltaEvent("bGFzdA==", format="pcm", sample_rate=24000, channels=1, content_id=content_id),
+            BidiAudioStopEvent(content_id),
             BidiResponseStopEvent("r1"),
         ]
     )
     assert tru_events == exp_events
+    assert state.audio_content_id is None
+
+    next_events = model._convert_gemini_live_event(live_message(data=b"next"), state)
+    next_content_id = state.audio_content_id
+    assert isinstance(next_content_id, str)
+    assert next_content_id != content_id
+    assert next_events[-2:] == [
+        BidiAudioStartEvent(next_content_id),
+        BidiAudioDeltaEvent("bmV4dA==", "pcm", 24000, 1, next_content_id),
+    ]
 
 
 @pytest.mark.asyncio
@@ -1400,7 +1402,7 @@ async def test_barge_in_completes_at_turn_boundary(
     """A response stopped by barge-in stays open until its native turn boundary."""
     _, _, _ = mock_genai_client
     await model.start()
-    turn_state = _TurnState(response_id="r1", output_transcript="Spoken answer.", output_transcript_id="t1")
+    turn_state = _TurnState(response_id="r1", output_transcript_id="t1")
     if with_tool_call:
         model._convert_gemini_live_event(
             genai_types.LiveServerMessage(
@@ -1418,7 +1420,7 @@ async def test_barge_in_completes_at_turn_boundary(
         live_message(server_content=server_content(turn_complete=True)), turn_state
     )
     exp_events = [
-        BidiTranscriptStopEvent("Spoken answer.", "assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("assistant", content_id=unittest.mock.ANY),
         BidiResponseStopEvent("r1"),
     ]
     assert tru_events == exp_events
@@ -1468,16 +1470,13 @@ def test_tool_handoff_and_continuation_have_separate_responses(model, complete_w
         BidiTranscriptStartEvent("user", content_id=input_id),
         BidiTranscriptDeltaEvent("What time is it?", "user", content_id=input_id),
         BidiResponseStartEvent(response_id),
-        ToolUseStreamEvent(
-            delta={"toolUse": {"toolUseId": "tool-1", "name": "time_tool", "input": "{}"}},
-            current_tool_use={"toolUseId": "tool-1", "name": "time_tool", "input": {}},
-        ),
-        BidiTranscriptStopEvent("What time is it?", "user", content_id=input_id),
+        BidiToolUseBlocksEvent([{"toolUseId": "tool-1", "name": "time_tool", "input": {}}]),
+        BidiTranscriptStopEvent("user", content_id=input_id),
         BidiResponseStopEvent(response_id),
         BidiResponseStartEvent(continuation_id),
         BidiTranscriptStartEvent("assistant", content_id=content_id),
         BidiTranscriptDeltaEvent("It is noon.", "assistant", content_id=content_id),
-        BidiTranscriptStopEvent("It is noon.", "assistant", content_id=content_id),
+        BidiTranscriptStopEvent("assistant", content_id=content_id),
         BidiResponseStopEvent(continuation_id),
     ]
     assert tru_events == exp_events
@@ -1813,12 +1812,13 @@ def test__convert_gemini_live_event_audio_format(model_id, mock_genai_client, ap
 
     tru_events = model._convert_gemini_live_event(live_message(data=b"audio_data"), turn_state)
     exp_events = [
-        BidiAudioStartEvent(),
+        BidiAudioStartEvent(content_id=unittest.mock.ANY),
         BidiAudioDeltaEvent(
             audio=base64.b64encode(b"audio_data").decode(),
             format="pcm",
             sample_rate=24000,
             channels=1,
+            content_id=unittest.mock.ANY,
         ),
     ]
     assert tru_events == exp_events
@@ -1833,6 +1833,7 @@ async def test_tool_result_single_content_unwrapped(mock_genai_client, model):
     _, mock_live_session, _ = mock_genai_client
     await model.start()
 
+    model._turn_state.tool_names["tool-123"] = "calculator"
     tool_result = ToolResultBlock(tool_use_id="tool-123", status="success", content=[{"text": "Single result"}])
 
     await model.send(BidiMessage(content=[tool_result]))
@@ -1857,6 +1858,7 @@ async def test_tool_result_multiple_content_as_array(mock_genai_client, model):
     _, mock_live_session, _ = mock_genai_client
     await model.start()
 
+    model._turn_state.tool_names["tool-456"] = "calculator"
     tool_result = ToolResultBlock(
         tool_use_id="tool-456", status="success", content=[{"text": "Part 1"}, {"json": {"data": "value"}}]
     )
@@ -1935,12 +1937,12 @@ def test_completion_after_barge_in_preserves_new_utterance(model):
     second_id = convert(voice_activity={"voice_activity_type": "ACTIVITY_START"})[0].content_id
     convert(server_content={"input_transcription": {"text": "Second question"}, "interrupted": True})
     assert convert(server_content={"turn_complete": True}) == [
-        BidiTranscriptStopEvent("First question", "user", content_id=first_id),
-        BidiTranscriptStopEvent("First answer", "assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("user", content_id=first_id),
+        BidiTranscriptStopEvent("assistant", content_id=unittest.mock.ANY),
         BidiResponseStopEvent(first_response_id),
     ]
     assert state.input_id == second_id
-    assert state.transcripts == {second_id: "Second question"}
+    assert state.input_ids == {second_id}
     assert convert(server_content={"output_transcription": {"text": "Second answer"}})[0] == (
         BidiResponseStartEvent(state.response_id)
     )
@@ -1958,7 +1960,7 @@ def test_activity_without_transcript_text_completes(model):
     tru_events = [*started, *completed]
     exp_events = [
         BidiTranscriptStartEvent("user", content_id=input_id),
-        BidiTranscriptStopEvent("", "user", content_id=input_id),
+        BidiTranscriptStopEvent("user", content_id=input_id),
     ]
     assert tru_events == exp_events
     assert state.input_id is None
@@ -1974,7 +1976,7 @@ def test_finished_transcription_is_emitted_before_turn_complete(model):
     assert events == [
         BidiTranscriptStartEvent("user", content_id=input_id),
         BidiTranscriptDeltaEvent("Question", "user", content_id=input_id),
-        BidiTranscriptStopEvent("Question", "user", content_id=input_id),
+        BidiTranscriptStopEvent("user", content_id=input_id),
     ]
     events = model._convert_gemini_live_event(
         genai_types.LiveServerMessage(server_content={"output_transcription": {"text": "Answer"}}), state
@@ -2004,7 +2006,7 @@ def test_first_transcript_after_assistant_output_keeps_receive_order(model, fini
 
     user_events = convert(input_transcription={"text": "Question", "finished": finished})
     input_id = user_events[0].content_id
-    user_complete = BidiTranscriptStopEvent("Question", "user", content_id=input_id)
+    user_complete = BidiTranscriptStopEvent("user", content_id=input_id)
     assert user_events == [
         BidiTranscriptStartEvent("user", content_id=input_id),
         BidiTranscriptDeltaEvent("Question", "user", content_id=input_id),
@@ -2012,10 +2014,10 @@ def test_first_transcript_after_assistant_output_keeps_receive_order(model, fini
     ]
     assert convert(turn_complete=True) == [
         *([] if finished else [user_complete]),
-        BidiTranscriptStopEvent("Answer", "assistant", content_id=unittest.mock.ANY),
+        BidiTranscriptStopEvent("assistant", content_id=unittest.mock.ANY),
         BidiResponseStopEvent(response_id),
     ]
-    assert state.transcripts == {}
+    assert state.input_ids == set()
     assert state.input_id is None
 
 
@@ -2035,3 +2037,30 @@ def test_live_tool_uses_structured_parameter_schema(model):
             }
         ],
     }
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("restart", [None, "resumed", "fresh", "resume_rejected"])
+async def test_send_tool_results_preserves_group(model, mock_genai_client, restart):
+    _, session, context_manager = mock_genai_client
+    await model.start()
+    calls = [{"id": "first", "name": "lookup"}, {"id": "second", "name": "calculator"}]
+    model._convert_gemini_live_event(
+        genai_types.LiveServerMessage(tool_call={"function_calls": calls}), model._turn_state
+    )
+    if restart is not None:
+        model._live_session_handle = None if restart == "fresh" else "resume-handle"
+        if restart == "resume_rejected":
+            context_manager.__aenter__.side_effect = [RuntimeError("resume rejected"), session]
+        await model.restart()
+
+    results = [ToolResultBlock(name, "success", [{"text": name}]) for name in ("first", "second")]
+    await model.send(BidiMessage(content=results))
+    session.send_tool_response.assert_awaited_once_with(
+        function_responses=[
+            genai_types.FunctionResponse(id="first", name="lookup", response={"text": "first"}),
+            genai_types.FunctionResponse(id="second", name="calculator", response={"text": "second"}),
+        ]
+    )
+    assert model._turn_state.tool_names == {}
+    await model.stop()

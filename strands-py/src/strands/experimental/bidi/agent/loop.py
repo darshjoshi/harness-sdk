@@ -6,7 +6,6 @@ The agent loop handles the events received from the model and executes tools whe
 import asyncio
 import logging
 import time
-import warnings
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, cast
@@ -14,11 +13,11 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from opentelemetry.trace import Span
 
 from ....telemetry.tracer import get_tracer
-from ....types._events import ToolInterruptEvent, ToolResultEvent, ToolResultMessageEvent, ToolUseStreamEvent
+from ....types._events import ToolInterruptEvent, ToolResultEvent, ToolResultMessageEvent
 from ....types.content import ContentBlock, Message
 from ....types.tools import ToolResult, ToolResultBlock, ToolUse
 from .. import _telemetry
-from .._async import _TaskPool, stop_all
+from .._async import _TaskGroup, _TaskPool, stop_all
 from ..hooks.events import (
     BidiAfterConnectionRestartEvent,
     BidiAgentStopEvent,
@@ -31,7 +30,7 @@ from ..hooks.events import (
     BidiResponseStopEvent as BidiResponseStopHookEvent,
 )
 from ..models import ConnectionTimeoutError, Restartable
-from ..types.content import BidiContentDelta, BidiMessage, BidiToolMetadata, BidiTranscriptMetadata
+from ..types.content import BidiContentDelta, BidiMessage, BidiToolMetadata
 from ..types.events import (
     BidiAudioDeltaEvent,
     BidiBargeInEvent,
@@ -39,12 +38,21 @@ from ..types.events import (
     BidiConnectionStopEvent,
     BidiConnectionWarningEvent,
     BidiOutputEvent,
+    BidiReasoningDeltaEvent,
+    BidiReasoningStartEvent,
+    BidiReasoningStopEvent,
     BidiResponseStartEvent,
     BidiResponseStopEvent,
+    BidiTextDeltaEvent,
+    BidiTextStartEvent,
+    BidiTextStopEvent,
+    BidiToolUseBlocksEvent,
+    BidiTranscriptDeltaEvent,
     BidiTranscriptStartEvent,
     BidiTranscriptStopEvent,
     BidiUsageEvent,
 )
+from ._blocks import _ReasoningBlock, _TextBlock, _TranscriptBlock
 from ._reconnect_timer import _ReconnectTimer, resolve_deadline_s
 
 if TYPE_CHECKING:
@@ -189,6 +197,8 @@ class _AgentLoop:
         self._model_task = self._task_pool.create(self._run_model(self._generation))
 
         self._invocation_state = invocation_state if invocation_state is not None else {}
+        # Retained for compatibility with shared tools that expect request_state.
+        self._invocation_state.setdefault("request_state", {})
         self._send_gate.set()
         self._started = True
 
@@ -594,12 +604,14 @@ class _AgentLoop:
         response_start_time: float | None = None
         time_to_first_audio_ms: int | None = None
         model_error: Exception | None = None
-        transcripts: dict[str, Message] = {}
+        blocks: dict[str, _TextBlock] = {}
 
         try:
             async for event in self._agent.model.receive():
                 if generation != self._generation:
                     return
+
+                output_events = [event]
 
                 if isinstance(event, BidiResponseStartEvent):
                     if response_span:
@@ -617,54 +629,58 @@ class _AgentLoop:
                     self._awaiting_response = False
                     self._update_turn_state()
 
-                elif isinstance(event, BidiTranscriptStartEvent):
-                    if event.role == "user":
-                        self._awaiting_response = True
-                        self._update_turn_state()
+                elif isinstance(event, (BidiTextStartEvent, BidiReasoningStartEvent, BidiTranscriptStartEvent)):
+                    if isinstance(event, BidiTranscriptStartEvent):
+                        if event.role == "user":
+                            self._awaiting_response = True
+                            self._update_turn_state()
+                        block: _TextBlock = _TranscriptBlock(event.content_id, event.role)
+                    elif isinstance(event, BidiReasoningStartEvent):
+                        block = _ReasoningBlock(event.content_id)
+                    else:
+                        block = _TextBlock(event.content_id)
 
-                    message: Message = {
-                        "role": event.role,
-                        "content": [],
-                        "metadata": {"custom": {"bidi": BidiTranscriptMetadata(kind="transcript", status="pending")}},
-                    }
-                    await self._agent._append_messages(message)
-                    transcripts[event.content_id] = message
+                    await self._agent._append_messages(block.message)
+                    blocks[event.content_id] = block
 
                 elif isinstance(event, BidiAudioDeltaEvent):
                     if response_start_time is not None and time_to_first_audio_ms is None:
                         time_to_first_audio_ms = int((time.perf_counter() - response_start_time) * 1000)
 
-                elif isinstance(event, BidiTranscriptStopEvent):
-                    message = transcripts.pop(event.content_id)
-                    await self._agent._update_message(
-                        {
-                            **message,
-                            "content": [{"text": event.transcript}],
-                            "metadata": {
-                                "custom": {"bidi": BidiTranscriptMetadata(kind="transcript", status="complete")}
-                            },
-                        }
-                    )
+                elif isinstance(event, (BidiTextDeltaEvent, BidiReasoningDeltaEvent, BidiTranscriptDeltaEvent)):
+                    blocks[event.content_id].append(event.delta)
 
-                elif isinstance(event, ToolUseStreamEvent):
-                    tool_use = event["current_tool_use"]
-                    dispatch: ToolResult = {
-                        "toolUseId": tool_use["toolUseId"],
-                        "status": "success",
-                        "content": [{"text": "Tool call started. Its result will follow in a separate tool exchange."}],
+                elif isinstance(event, (BidiTextStopEvent, BidiReasoningStopEvent, BidiTranscriptStopEvent)):
+                    block = blocks.pop(event.content_id)
+                    await self._agent._update_message(block.to_message())
+                    output_events.append(block.to_event())
+
+                elif isinstance(event, BidiToolUseBlocksEvent):
+                    tool_use_message: Message = {
+                        "role": "assistant",
+                        "content": [{"toolUse": tool_use} for tool_use in event.tool_uses],
                     }
-                    await self._agent._append_messages(
-                        {"role": "assistant", "content": [{"toolUse": tool_use}]},
-                        {
-                            "role": "user",
-                            "content": [{"toolResult": dispatch}],
-                            "metadata": {
-                                "custom": {
-                                    "bidi": BidiToolMetadata(kind="tool_dispatch", tool_use_id=tool_use["toolUseId"])
+                    tool_result_message: Message = {
+                        "role": "user",
+                        "content": [
+                            {
+                                "toolResult": {
+                                    "toolUseId": tool_use["toolUseId"],
+                                    "status": "success",
+                                    "content": [
+                                        {
+                                            "text": (
+                                                "Tool call started. Its result will follow in a separate tool exchange."
+                                            )
+                                        }
+                                    ],
                                 }
-                            },
-                        },
-                    )
+                            }
+                            for tool_use in event.tool_uses
+                        ],
+                        "metadata": {"custom": {"bidi": BidiToolMetadata(kind="tool_dispatch")}},
+                    }
+                    await self._agent._append_messages(tool_use_message, tool_result_message)
 
                 elif isinstance(event, BidiBargeInEvent):
                     if self._session_span:
@@ -697,12 +713,13 @@ class _AgentLoop:
 
                 if generation != self._generation:
                     return
-                await self._event_queue.put(event)
-                if generation != self._generation:
-                    return
+                for output_event in output_events:
+                    await self._event_queue.put(output_event)
+                    if generation != self._generation:
+                        return
 
-                if isinstance(event, ToolUseStreamEvent):
-                    self._task_pool.create(self._run_tool(event["current_tool_use"], generation))
+                if isinstance(event, BidiToolUseBlocksEvent):
+                    self._task_pool.create(self._run_tools(event.tool_uses))
 
         except Exception as error:
             model_error = error
@@ -711,17 +728,9 @@ class _AgentLoop:
             if generation == self._generation:
                 await self._event_queue.put(_ReaderError(generation, error))
         finally:
-            for message in transcripts.values():
-                await self._agent._update_message(
-                    {
-                        **message,
-                        "content": [{"text": "[Transcript unavailable.]"}],
-                        "metadata": {
-                            "custom": {"bidi": BidiTranscriptMetadata(kind="transcript", status="incomplete")}
-                        },
-                    },
-                    strict=False,
-                )
+            for block in blocks.values():
+                await self._agent._update_message(block.to_message(complete=False), strict=False)
+
             if response_span:
                 _telemetry.end_response_span(
                     self._tracer,
@@ -731,24 +740,58 @@ class _AgentLoop:
                 )
                 response_span = None
 
-    async def _run_tool(self, tool_use: ToolUse, generation: int) -> None:
+    async def _run_tools(self, tool_uses: list[ToolUse]) -> None:
+        """Execute a provider's tool group concurrently and send its results together."""
+        try:
+            async with _TaskGroup() as task_group:
+                tasks = [task_group.create_task(self._run_tool(tool_use)) for tool_use in tool_uses]
+
+            tool_results = [task.result() for task in tasks]
+            tool_use_message: Message = {
+                "role": "assistant",
+                "content": [{"toolUse": tool_use} for tool_use in tool_uses],
+            }
+            tool_result_message: Message = {
+                "role": "user",
+                "content": [{"toolResult": tool_result} for tool_result in tool_results],
+                "metadata": {"custom": {"bidi": BidiToolMetadata(kind="tool_result")}},
+            }
+            await self._agent._append_messages(tool_use_message, tool_result_message)
+            await self._event_queue.put(ToolResultMessageEvent(tool_result_message))
+
+            if self._agent.cancel_signal.is_set():
+                logger.info("cancellation requested | stopping conversation")
+                connection_id = getattr(self._agent.model, "_connection_id", "unknown")
+                await self._event_queue.put(BidiConnectionStopEvent(connection_id=connection_id, reason="user_request"))
+                return
+
+            await self.send(
+                BidiMessage(
+                    content=[
+                        ToolResultBlock(
+                            tool_use_id=result["toolUseId"],
+                            status=result["status"],
+                            content=result["content"],
+                        )
+                        for result in tool_results
+                    ]
+                )
+            )
+        except Exception as error:
+            await self._event_queue.put(error)
+
+    async def _run_tool(self, tool_use: ToolUse) -> ToolResult:
         """Task for running tool requested by the model using the tool executor.
 
         Args:
             tool_use: Tool use request from model.
-            generation: Connection generation that issued the tool use. If a reconnect
-                advances the generation before the tool finishes, the result is recorded
-                in history but not sent, since the new connection never issued this
-                tool_use_id and would reject the result.
+
+        Returns:
+            The tool result.
         """
         logger.debug("tool_name=<%s> | tool execution starting", tool_use["name"])
 
         tool_results: list[ToolResult] = []
-
-        # Ensure request_state exists for tools like strands_tools.stop
-        invocation_state = self._invocation_state
-        if "request_state" not in invocation_state:
-            invocation_state["request_state"] = {}
 
         tool_call_span = self._tracer.start_tool_call_span(tool_use, parent_span=self._session_span)
         tool_result: ToolResult | None = None
@@ -759,7 +802,7 @@ class _AgentLoop:
                 self._agent,
                 tool_use,
                 tool_results,
-                invocation_state,
+                self._invocation_state,
                 structured_output_context=None,
             )
 
@@ -771,73 +814,14 @@ class _AgentLoop:
 
                 await self._event_queue.put(tool_event)
 
-            # Normal flow for all tools (including stop_conversation)
             tool_result_event = cast(ToolResultEvent, tool_event)
             tool_result = tool_result_event.tool_result
 
-            tool_use_message: Message = {
-                "role": "assistant",
-                "content": [{"toolUse": tool_use}],
-            }
-            tool_result_message: Message = {
-                "role": "user",
-                "content": [{"toolResult": tool_result}],
-                "metadata": {
-                    "custom": {"bidi": BidiToolMetadata(kind="tool_result", tool_use_id=tool_use["toolUseId"])}
-                },
-            }
-            await self._agent._append_messages(tool_use_message, tool_result_message)
-
-            await self._event_queue.put(ToolResultMessageEvent(tool_result_message))
-
-            # Check for stop_event_loop flag (set by strands_tools.stop, stop_conversation, or any custom tool)
-            request_state = invocation_state.get("request_state", {})
-            should_stop = request_state.get("stop_event_loop", False)
-
-            # Backward compatibility: also check for stop_conversation by name (deprecated)
-            if not should_stop and tool_use["name"] == "stop_conversation":
-                warnings.warn(
-                    "Stopping the event loop by tool name 'stop_conversation' is deprecated. "
-                    "Use request_state['stop_event_loop'] = True instead.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-                should_stop = True
-
-            if should_stop:
-                logger.info("stop_event_loop=<True> | stopping conversation")
-                connection_id = getattr(self._agent.model, "_connection_id", "unknown")
-                await self._event_queue.put(BidiConnectionStopEvent(connection_id=connection_id, reason="user_request"))
-                return  # Skip sending result to model
-
-            # Wait out any in-flight reconnect (send() gates on the swap), then re-check: a tool
-            # that finished across a swap must not send its result to the new connection, which
-            # never issued this tool_use_id and would reject it. The exchange is already recorded
-            # in messages above for the provider's reconnect replay.
-            await self._send_gate.wait()
-            if generation != self._generation:
-                logger.warning(
-                    "tool_use_id=<%s> | tool completed across reconnect | result recorded, not sent to new connection",
-                    tool_use["toolUseId"],
-                )
-                return
-
-            # Send result to model
-            await self.send(
-                BidiMessage(
-                    content=[
-                        ToolResultBlock(
-                            tool_use_id=tool_result["toolUseId"],
-                            status=tool_result["status"],
-                            content=tool_result["content"],
-                        )
-                    ]
-                )
-            )
+            return tool_result
 
         except Exception as error:
             tool_error = error
-            await self._event_queue.put(error)
+            raise
         finally:
             # Single end site ensures the span is closed even on cancellation.
             self._tracer.end_tool_call_span(tool_call_span, tool_result=tool_result, error=tool_error)
