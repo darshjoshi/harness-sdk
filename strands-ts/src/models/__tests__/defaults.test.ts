@@ -42,12 +42,24 @@ describe('getContextWindowLimit', () => {
     expect(getContextWindowLimit('global.anthropic.claude-sonnet-4-6')).toBe(1_000_000)
   })
 
-  it('does not strip unknown prefixes', () => {
-    expect(getContextWindowLimit('custom.gpt-5.4')).toBeUndefined()
+  it('strips nested Bedrock prefixes before lookup', () => {
+    expect(getContextWindowLimit('us.openai.gpt-5.6-luna')).toBe(1_050_000)
+    expect(getContextWindowLimit('global.openai.gpt-5.6-luna')).toBe(1_050_000)
+    expect(getContextWindowLimit('global.openai.gpt-6-astra')).toBe(1_050_000)
+    expect(
+      getContextWindowLimit('arn:aws:bedrock:eu-west-2:123456789012:inference-profile/global.openai.gpt-5.6-luna')
+    ).toBe(1_050_000)
+  })
+
+  it('strips any prefix as a fallback', () => {
+    expect(getContextWindowLimit('custom.anthropic.claude-sonnet-4-6')).toBe(1_000_000)
+    expect(getContextWindowLimit('custom.gpt-5.4')).toBe(1_050_000)
+    expect(getContextWindowLimit('openai.gpt-6-astra')).toBe(1_050_000)
   })
 
   it('returns undefined for unknown model IDs', () => {
     expect(getContextWindowLimit('unknown-model-xyz')).toBeUndefined()
+    expect(getContextWindowLimit('foo.unknown-model-xyz')).toBeUndefined()
     expect(getContextWindowLimit('us.unknown.model-v1:0')).toBeUndefined()
   })
 })

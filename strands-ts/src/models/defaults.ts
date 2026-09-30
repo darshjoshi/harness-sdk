@@ -57,7 +57,7 @@ export const DEFAULT_CONTEXT_WINDOW_LIMIT = 200_000
  * https://github.com/BerriAI/litellm/blob/litellm_internal_staging/model_prices_and_context_window.json
  *
  * For Bedrock models with cross-region prefixes (e.g. `us.`, `eu.`, `global.`),
- * {@link getContextWindowLimit} strips the prefix before lookup so only the base model ID is needed here.
+ * {@link getContextWindowLimit} strips prefixes before lookup so only the base model ID is needed here.
  */
 const CONTEXT_WINDOW_LIMITS: Record<string, number> = {
   // Anthropic (direct API)
@@ -177,17 +177,10 @@ const CONTEXT_WINDOW_LIMITS: Record<string, number> = {
 }
 
 /**
- * Known Bedrock cross-region routing prefixes.
- *
- * @see https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html
- */
-const BEDROCK_REGION_PREFIXES = new Set(['us', 'eu', 'ap', 'global', 'apac', 'au', 'jp', 'us-gov'])
-
-/**
  * Looks up the context window limit for a model ID.
  *
- * For Bedrock cross-region model IDs (e.g. `us.anthropic.claude-sonnet-4-6`),
- * the region prefix is stripped before lookup.
+ * For Bedrock model IDs with prefixes (e.g. `us.anthropic.claude-sonnet-4-6`),
+ * prefixes are stripped before lookup.
  *
  * @param modelId - The model ID to look up
  * @returns The context window limit in tokens, or undefined if not found
@@ -196,13 +189,12 @@ export function getContextWindowLimit(modelId: string): number | undefined {
   const direct = CONTEXT_WINDOW_LIMITS[modelId]
   if (direct !== undefined) return direct
 
-  // Strip known Bedrock cross-region prefixes
-  const dotIndex = modelId.indexOf('.')
-  if (dotIndex !== -1) {
-    const prefix = modelId.substring(0, dotIndex)
-    if (BEDROCK_REGION_PREFIXES.has(prefix)) {
-      return CONTEXT_WINDOW_LIMITS[modelId.substring(dotIndex + 1)]
-    }
+  // Strip prefixes before each dot and retry
+  let stripped = modelId
+  while (stripped.includes('.')) {
+    stripped = stripped.substring(stripped.indexOf('.') + 1)
+    const limit = CONTEXT_WINDOW_LIMITS[stripped]
+    if (limit !== undefined) return limit
   }
 
   return undefined
