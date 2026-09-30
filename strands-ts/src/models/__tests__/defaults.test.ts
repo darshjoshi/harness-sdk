@@ -62,4 +62,11 @@ describe('getContextWindowLimit', () => {
     expect(getContextWindowLimit('foo.unknown-model-xyz')).toBeUndefined()
     expect(getContextWindowLimit('us.unknown.model-v1:0')).toBeUndefined()
   })
+
+  it('returns undefined for Object.prototype property names', () => {
+    expect(getContextWindowLimit('constructor')).toBeUndefined()
+    expect(getContextWindowLimit('x.constructor')).toBeUndefined()
+    expect(getContextWindowLimit('global.openai.toString')).toBeUndefined()
+    expect(getContextWindowLimit('__proto__')).toBeUndefined()
+  })
 })

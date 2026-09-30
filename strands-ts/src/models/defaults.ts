@@ -186,15 +186,13 @@ const CONTEXT_WINDOW_LIMITS: Record<string, number> = {
  * @returns The context window limit in tokens, or undefined if not found
  */
 export function getContextWindowLimit(modelId: string): number | undefined {
-  const direct = CONTEXT_WINDOW_LIMITS[modelId]
-  if (direct !== undefined) return direct
+  if (Object.hasOwn(CONTEXT_WINDOW_LIMITS, modelId)) return CONTEXT_WINDOW_LIMITS[modelId]
 
   // Strip prefixes before each dot and retry
   let stripped = modelId
   while (stripped.includes('.')) {
     stripped = stripped.substring(stripped.indexOf('.') + 1)
-    const limit = CONTEXT_WINDOW_LIMITS[stripped]
-    if (limit !== undefined) return limit
+    if (Object.hasOwn(CONTEXT_WINDOW_LIMITS, stripped)) return CONTEXT_WINDOW_LIMITS[stripped]
   }
 
   return undefined
