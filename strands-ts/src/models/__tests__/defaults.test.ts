@@ -51,6 +51,24 @@ describe('getContextWindowLimit', () => {
     ).toBe(1_050_000)
   })
 
+  it('resolves one table entry from every provider-prefixed form', () => {
+    expect(getContextWindowLimit('gpt-6-astra')).toBe(1_050_000)
+    expect(getContextWindowLimit('openai.gpt-6-astra')).toBe(1_050_000)
+    expect(getContextWindowLimit('global.openai.gpt-6-astra')).toBe(1_050_000)
+
+    expect(getContextWindowLimit('glm-4.7')).toBe(203_000)
+    expect(getContextWindowLimit('zai.glm-4.7')).toBe(203_000)
+    expect(getContextWindowLimit('global.zai.glm-4.7')).toBe(203_000)
+
+    expect(getContextWindowLimit('nova-pro-v1:0')).toBe(300_000)
+    expect(getContextWindowLimit('amazon.nova-pro-v1:0')).toBe(300_000)
+    expect(getContextWindowLimit('us.amazon.nova-pro-v1:0')).toBe(300_000)
+
+    expect(getContextWindowLimit('claude-haiku-4-5-20251001-v1:0')).toBe(200_000)
+    expect(getContextWindowLimit('anthropic.claude-haiku-4-5-20251001-v1:0')).toBe(200_000)
+    expect(getContextWindowLimit('eu.anthropic.claude-haiku-4-5-20251001-v1:0')).toBe(200_000)
+  })
+
   it('strips any prefix as a fallback', () => {
     expect(getContextWindowLimit('custom.anthropic.claude-sonnet-4-6')).toBe(1_000_000)
     expect(getContextWindowLimit('custom.gpt-5.4')).toBe(1_050_000)
