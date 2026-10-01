@@ -218,7 +218,6 @@ to claim your own prefix and avoid overlapping with other subsystems.
 ## Related pages
 
 - [Conversation Management](/docs/user-guide/sdk/agents/conversation-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
 - [Persist state across sessions](/docs/user-guide/sdk/agents/session-management/index.md) (1 shared tag)
 - [State Management](/docs/user-guide/sdk/agents/state/index.md) (1 shared tag)
 

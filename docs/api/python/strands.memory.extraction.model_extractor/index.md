@@ -36,7 +36,7 @@ Initialize the extractor.
 
 **Arguments**:
 
--   `model` - Model used to extract facts. Defaults to the agent’s own model (via :attr:`ExtractorContext.default_model`); set a cheaper one to cut cost.
+-   `model` - Model used to extract facts. Resolution order: this `model` > :attr:`ExtractorContext.default_model` (`agent.aux_model` > `agent.model`).
 -   `system_prompt` - System prompt steering what counts as a fact. Defaults to a general fact-extraction prompt.
 
 #### extract
@@ -47,7 +47,7 @@ async def extract(
         context: ExtractorContext | None = None) -> list[ExtractionResult]
 ```
 
-Defined in: [src/strands/memory/extraction/model\_extractor.py:62](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/memory/extraction/model_extractor.py#L62)
+Defined in: [src/strands/memory/extraction/model\_extractor.py:61](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/memory/extraction/model_extractor.py#L61)
 
 Extract entries from a batch of messages.
 

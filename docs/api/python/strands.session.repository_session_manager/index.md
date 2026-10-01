@@ -75,7 +75,7 @@ Defined in: [src/strands/session/repository\_session\_manager.py:119](https://gi
 
 Serialize and update the agent into the session repository.
 
-For Agent, only updates if state or internal state has changed. BidiAgent is written on every sync, preserving its existing persistence behavior.
+For Agent, only updates if state or internal state has changed. Other LocalAgent implementations are written on every sync.
 
 **Arguments**:
 

@@ -31,7 +31,7 @@ const agent = new Agent({
 | [Handoff to User](#handoff-to-user) | Pause the agent loop and surface a message to the user | Python, TypeScript (Node.js, browsers) |
 | [Stop](#stop-experimental) | Gracefully end the agent loop when the task is complete | Python, TypeScript (Node.js, browsers) |
 | [Web Fetch](#web-fetch) | Fetch a URL and return cleaned markdown for a model to read | Python, TypeScript (Node.js) |
-| [A2A Client](#a2a-client) | Discover and send messages to remote A2A-protocol agents | Python |
+| [A2A Client](#a2a-client) | Discover and send messages to remote A2A-protocol agents | Python, TypeScript (Node.js, browsers) |
 
 ### File editor
 
@@ -631,14 +631,66 @@ Lets your agent discover and communicate with remote [A2A (Agent-to-Agent) proto
 -   **`discover`** — fetches the agent card from a remote A2A endpoint and returns its capabilities, name, description, and skills.
 -   **`send_message`** — sends a text message to a remote A2A agent and returns the response.
 
-The tool is stateless: a fresh `A2AAgent` is created on every call using the `ClientConfig` configured for that endpoint. Use `make_a2a_client` to control which endpoints the model may contact, with per-endpoint authentication, and to tune size limits. Requires `pip install 'strands-agents[a2a]'`.
+The tool is stateless: a fresh `A2AAgent` is created on every call using the per-endpoint configuration. Use `make_a2a_client` / `makeA2AClient` to control which endpoints the model may contact, with per-endpoint authentication, and to tune size limits.
 
-*Supported in: Python.*
+*Supported in: Python, TypeScript (Node.js, browsers).*
+
+Install required
+
+(( tab "Python" ))
+`a2a_client` requires the optional `a2a` extra:
+
+```bash
+pip install 'strands-agents[a2a]'
+```
+(( /tab "Python" ))
+
+(( tab "TypeScript" ))
+Requires the optional `@a2a-js/sdk` peer dependency:
+
+```bash
+npm install @a2a-js/sdk
+```
+(( /tab "TypeScript" ))
 
 Endpoint security
 
-`allowed_endpoints` is required and checked before any network connection is made, but it only gates the agent-card fetch. `send_message` is delivered to the `url` in that card, which may point to a different host, and HTTP redirects are not checked either. For full egress control, enforce it at the network layer.
+`allowed_endpoints` / `allowedEndpoints` is required and checked before any network connection is made, but it only gates the agent-card fetch. `send_message` is delivered to the `url` in that card, which may point to a different host, and HTTP redirects are not checked either. For full egress control, enforce it at the network layer.
 
+**Example:**
+
+(( tab "TypeScript" ))
+```typescript
+import { Agent } from '@strands-agents/sdk'
+import { ClientFactory, DefaultAgentCardResolver, JsonRpcTransportFactory, RestTransportFactory, createAuthenticatingFetchWithRetry } from '@a2a-js/sdk/client'
+import { makeA2AClient } from '@strands-agents/sdk/vended-tools/a2a-client'
+
+const authFetch = createAuthenticatingFetchWithRetry(fetch, {
+  headers: async () => ({ Authorization: 'Bearer your-token' }),
+  shouldRetryWithHeaders: async () => undefined,
+})
+
+const a2aClient = makeA2AClient({
+  allowedEndpoints: [
+    // No auth needed
+    'https://agent.example.com',
+    // Custom ClientFactory for authenticated requests
+    ['https://researcher.example.com', new ClientFactory({
+      transports: [
+        new JsonRpcTransportFactory({ fetchImpl: authFetch }),
+        new RestTransportFactory({ fetchImpl: authFetch }),
+      ],
+      cardResolver: new DefaultAgentCardResolver({ fetchImpl: authFetch }),
+    })],
+  ],
+})
+
+const agent = new Agent({ tools: [a2aClient] })
+await agent.invoke('What has the research agent found recently?')
+```
+(( /tab "TypeScript" ))
+
+(( tab "Python" ))
 ```python
 import httpx
 from a2a.client import ClientConfig
@@ -646,20 +698,22 @@ from strands import Agent
 from strands.vended_tools import make_a2a_client
 
 a2a_client = make_a2a_client(
-    allowed_endpoints={
-        "https://agent.example.com": None,
-        "https://researcher.example.com": ClientConfig(
+    allowed_endpoints=[
+        "https://agent.example.com",
+        ("https://researcher.example.com", ClientConfig(
             httpx_client=httpx.AsyncClient(
                 headers={"Authorization": "Bearer your-token"},
                 timeout=60.0,
             ),
-        ),
-    },
-    max_bytes=1 * 1024 * 1024,
+        )),
+    ],
 )
 agent = Agent(tools=[a2a_client])
 agent("What has the research agent found recently?")
 ```
+(( /tab "Python" ))
+
+Full API reference: [TypeScript](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/vended-tools/a2a-client/README.md)
 
 ---
 
@@ -730,6 +784,7 @@ Tool names are stable and will not change. In minor versions, a tool’s descrip
 - [harness-sdk/strands-ts/src/vended-tools/sleep/sleep.ts](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/vended-tools/sleep/sleep.ts)
 - [harness-sdk/strands-ts/src/vended-tools/web-fetch/web-fetch.ts](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/vended-tools/web-fetch/web-fetch.ts)
 - [harness-sdk/strands-ts/src/experimental/vended-tools/stop/stop.ts](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/experimental/vended-tools/stop/stop.ts)
+- [harness-sdk/strands-ts/src/vended-tools/a2a-client/a2a-client.ts](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/vended-tools/a2a-client/a2a-client.ts)
 
 ### Python
 

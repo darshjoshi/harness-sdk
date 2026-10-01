@@ -166,6 +166,8 @@
   - Realtime
     - [Overview](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/index.md): Build a realtime agent that streams audio in and out: a persistent BidiAgent connection, a realtime model provider, and the events, I/O, and barge-ins a live conversation needs.
     - [agent](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/agent/index.md): Build real-time voice conversations with BidiAgent. Stream audio and text over persistent connections with barge-ins and concurrent tool calling.
+    - [session-management](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md): Snapshot session manager support for BidiAgent is in development. This page will cover bidirectional streaming session management when support is available.
+    - [interrupts](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md): Interrupt support for BidiAgent is in development. This page will cover pausing and resuming bidirectional conversations when interrupt support is available.
     - [bedrock](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md): Build real-time speech-to-speech agents with Amazon Bedrock Nova Sonic and Strands. Bidirectional audio streaming with barge-in handling and tool calling.
     - [google](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md): Build real-time voice agents with Google's Gemini Live API and Strands. Stream audio and text over WebSocket with barge-ins and tool calling.
     - [openai](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md): Build low-latency voice agents with the OpenAI Realtime API and Strands. Configure speech-to-speech streaming, barge-ins, and tool calling.
@@ -173,8 +175,7 @@
     - [events](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/events/index.md): Send and receive bidirectional streaming events in Strands agents. Process audio, text, and tool activity in real time over persistent connections.
     - [barge-in](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md): Handle real-time voice barge-ins in BidiAgent. Voice Activity Detection stops responses mid-stream for natural, human-like conversations.
     - [hooks](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md): Extend BidiAgent with hooks for bidirectional streaming events: connection lifecycle, barge-ins, restarts, and real-time conversation logging.
-    - [session-management](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md): Persist BidiAgent conversation history and state across bidirectional streaming sessions so voice assistants resume where they left off.
-    - [observability](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/observability/index.md): Trace, measure, and log BidiAgent sessions: connection lifecycle, time to first audio, barge-ins, per-modality token usage, and reconnects.
+    - [observability](https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/observability/index.md): Trace, measure, and log BidiAgent sessions: connection lifecycle, time to first audio, barge-ins, per-modality token usage, and restarts.
   - Experimental
     - [agent-config](https://strandsagents.com/docs/user-guide/sdk/experimental/agent-config/index.md): Create Strands agents from JSON files or dictionaries with the experimental config_to_agent function, including tool loading and model settings.
 - Reference
@@ -290,7 +291,7 @@
 ## Community
 
 - Labs
-  - [labs](https://strandsagents.com/docs/labs/index.md): Explore Strands Labs, the experimental arm of Strands Agents: open source projects covering robotics, world models, agentic benchmarks, harness optimization, and audio processing.
+  - [labs](https://strandsagents.com/docs/labs/index.md): Explore Strands Labs, the experimental arm of Strands Agents: open source projects covering robotics, world models, agentic benchmarks, harness optimization, audio processing, and decision models.
 - Learning
   - [Lesson 1: How Agents Really Work](https://strandsagents.com/docs/learning/how-agents-really-work/index.md): A ground-up look at the agent loop: how a model, a set of tools, and a running context combine to let an agent reason, act, and observe until a task is done.
   - [Lesson 2: Switching Model Providers](https://strandsagents.com/docs/learning/switching-model-providers/index.md): This covers model providers: how Strands abstracts the underlying LLM so your agent logic stays the same regardless of which model you're calling.
@@ -320,15 +321,14 @@
 - [strands.agent.conversation_manager.null_conversation_manager](https://strandsagents.com/docs/api/python/strands.agent.conversation_manager.null_conversation_manager/index.md)
 - [strands.agent.conversation_manager.sliding_window_conversation_manager](https://strandsagents.com/docs/api/python/strands.agent.conversation_manager.sliding_window_conversation_manager/index.md)
 - [strands.agent.conversation_manager.summarizing_conversation_manager](https://strandsagents.com/docs/api/python/strands.agent.conversation_manager.summarizing_conversation_manager/index.md)
+- [strands.bidi.agent](https://strandsagents.com/docs/api/python/strands.bidi.agent/index.md)
+- [strands.bidi.hooks](https://strandsagents.com/docs/api/python/strands.bidi.hooks/index.md)
+- [strands.bidi.io](https://strandsagents.com/docs/api/python/strands.bidi.io/index.md)
+- [strands.bidi.models](https://strandsagents.com/docs/api/python/strands.bidi.models/index.md)
+- [strands.bidi.types](https://strandsagents.com/docs/api/python/strands.bidi.types/index.md)
 - [strands.event_loop.event_loop](https://strandsagents.com/docs/api/python/strands.event_loop.event_loop/index.md)
 - [strands.event_loop.streaming](https://strandsagents.com/docs/api/python/strands.event_loop.streaming/index.md)
 - [strands.experimental.agent_config](https://strandsagents.com/docs/api/python/strands.experimental.agent_config/index.md)
-- [strands.experimental.bidi.agent](https://strandsagents.com/docs/api/python/strands.experimental.bidi.agent/index.md)
-- [strands.experimental.bidi.hooks](https://strandsagents.com/docs/api/python/strands.experimental.bidi.hooks/index.md)
-- [strands.experimental.bidi.io](https://strandsagents.com/docs/api/python/strands.experimental.bidi.io/index.md)
-- [strands.experimental.bidi.models](https://strandsagents.com/docs/api/python/strands.experimental.bidi.models/index.md)
-- [strands.experimental.bidi.tools](https://strandsagents.com/docs/api/python/strands.experimental.bidi.tools/index.md)
-- [strands.experimental.bidi.types](https://strandsagents.com/docs/api/python/strands.experimental.bidi.types/index.md)
 - [strands.experimental.checkpoint.checkpoint](https://strandsagents.com/docs/api/python/strands.experimental.checkpoint.checkpoint/index.md)
 - [strands.experimental.tools.stop.stop](https://strandsagents.com/docs/api/python/strands.experimental.tools.stop.stop/index.md)
 - [strands.handlers.callback_handler](https://strandsagents.com/docs/api/python/strands.handlers.callback_handler/index.md)

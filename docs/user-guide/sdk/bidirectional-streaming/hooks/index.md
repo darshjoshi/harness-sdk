@@ -26,8 +26,8 @@ Register related hooks together by implementing `register_hooks()`:
 
 ```python
 from strands import LocalAgent
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.hooks import BidiAgentStopEvent, BidiResponseStopEvent
+from strands.bidi.agent import BidiAgent
+from strands.bidi.hooks import BidiAgentStopEvent, BidiResponseStopEvent
 from strands.hooks import AgentInitializedEvent, HookRegistry, MessageAddedEvent
 
 
@@ -62,7 +62,7 @@ Register a single hook with `add_hook()`, which infers the event type:
 
 ```python
 from strands import LocalAgent
-from strands.experimental.bidi.agent import BidiAgent
+from strands.bidi.agent import BidiAgent
 from strands.hooks import MessageAddedEvent
 
 
@@ -79,7 +79,7 @@ agent.add_hook(log_message)
 To observe completed transcripts, subscribe to `MessageUpdatedEvent`. A transcript first appears as an empty message through `MessageAddedEvent` when the transcript starts. Its completion replaces that message at the reserved position. `event.tracking_id` identifies the message and `event.message` contains the replacement.
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
+from strands.bidi.agent import BidiAgent
 from strands.hooks import MessageUpdatedEvent
 
 
@@ -97,7 +97,7 @@ agent.add_hook(log_update)
 
 ```python
 from strands import LocalAgent, ToolContext, tool
-from strands.experimental.bidi.agent import BidiAgent
+from strands.bidi.agent import BidiAgent
 from strands.hooks import AfterToolCallEvent, BeforeToolCallEvent
 
 
@@ -161,11 +161,13 @@ Choose hooks according to the boundary you need to observe:
 | `BidiBeforeConnectionRestartEvent` | Before a scheduled or timeout-driven restart |
 | `BidiAfterConnectionRestartEvent` | After a restart attempt, including failures |
 
-`BidiAgentStopEvent` carries `agent` and uses reverse callback ordering for cleanup. The session manager uses this event for its final state sync.
+`BidiAgentStopEvent` carries `agent` and uses reverse callback ordering for cleanup.
+
+See [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) for snapshot session manager support.
 
 `BidiResponseStopEvent` carries `agent` and `response_id`. Hooks run in registration order and finish before the corresponding streaming event reaches the consumer. The hook mirrors model-reported completion: shutdown or a connection failure without a stop event does not emit it.
 
-The hook and streaming event share a name but are separate classes. Import the hook from `strands.experimental.bidi.hooks`. Import the streaming event from `strands.experimental.bidi.types` when handling `agent.receive()` output.
+The hook and streaming event share a name but are separate classes. Import the hook from `strands.bidi.hooks`. Import the streaming event from `strands.bidi.types` when handling `agent.receive()` output.
 
 ## Cookbook
 
@@ -173,11 +175,11 @@ This section contains practical hook implementations for common use cases.
 
 ### Tracking barge-ins
 
-Count barge-ins and record their reasons:
+Count barge-ins:
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.hooks import BidiBargeInEvent
+from strands.bidi.agent import BidiAgent
+from strands.bidi.hooks import BidiBargeInEvent
 from strands.hooks import HookRegistry
 
 
@@ -190,7 +192,7 @@ class BargeInTracker:
 
     async def on_barge_in(self, event: BidiBargeInEvent) -> None:
         self.barge_in_count += 1
-        print(f"Barge-in #{self.barge_in_count}: {event.reason}")
+        print(f"Barge-in #{self.barge_in_count}")
 
 
 tracker = BargeInTracker()
@@ -202,8 +204,8 @@ agent = BidiAgent(hooks=[tracker])
 Track connection restart attempts and their outcomes:
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.hooks import (
+from strands.bidi.agent import BidiAgent
+from strands.bidi.hooks import (
     BidiAfterConnectionRestartEvent,
     BidiBeforeConnectionRestartEvent,
 )
@@ -237,8 +239,8 @@ agent = BidiAgent(hooks=[ConnectionMonitor()])
 Count model-reported response completions and report the total when the agent stops:
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.hooks import BidiAgentStopEvent, BidiResponseStopEvent
+from strands.bidi.agent import BidiAgent
+from strands.bidi.hooks import BidiAgentStopEvent, BidiResponseStopEvent
 from strands.hooks import HookRegistry
 
 
@@ -261,17 +263,13 @@ class ConversationAnalytics:
 agent = BidiAgent(hooks=[ConversationAnalytics()])
 ```
 
-### Session persistence
-
-Use `FileSessionManager` or `S3SessionManager` to persist messages and state. They register shared initialization and message-added hooks, plus `BidiAgentStopEvent` for the final sync. See [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md).
-
 ## Accessing invocation state
 
 Pass context through `start(invocation_state=...)` or `run(..., invocation_state=...)`. Tools and their hooks share the caller’s dictionary until the agent stops, including across connection restarts. Changes made by any of them are visible to the others.
 
 ```python
 from strands import LocalAgent, tool
-from strands.experimental.bidi.agent import BidiAgent
+from strands.bidi.agent import BidiAgent
 from strands.hooks import BeforeToolCallEvent
 
 
@@ -304,9 +302,8 @@ For more guidance on performance, errors, and composition, see the [Hooks docume
 ## Next steps
 
 -   [Agent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) - Learn about BidiAgent configuration and lifecycle
--   [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) - Persist conversations across sessions
 -   [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) - Complete guide to bidirectional streaming events
--   [Python API Reference](/docs/api/python/strands.experimental.bidi.agent) - Complete API documentation
+-   [Python API Reference](/docs/api/python/strands.bidi.agent) - Complete API documentation
 
 ## Related pages
 
@@ -316,18 +313,18 @@ For more guidance on performance, errors, and composition, see the [Hooks docume
 - [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
 - [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
 - [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
 - [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
 - [Build a custom plugin](/docs/user-guide/sdk/plugins/custom-plugins/index.md) (1 shared tag)
-- [Plugins](/docs/user-guide/sdk/plugins/index.md) (1 shared tag)
 
 
 ## Implementation
 
 ### Python
 
-- [harness-sdk/strands-py/src/strands/experimental/bidi/hooks/events.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/hooks/events.py)
-- [harness-sdk/strands-py/src/strands/experimental/bidi/agent/agent.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/agent/agent.py)
-- [harness-sdk/strands-py/src/strands/experimental/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/agent/loop.py)
+- [harness-sdk/strands-py/src/strands/bidi/hooks/events.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/hooks/events.py)
+- [harness-sdk/strands-py/src/strands/bidi/agent/agent.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/agent/agent.py)
+- [harness-sdk/strands-py/src/strands/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/agent/loop.py)
 - [harness-sdk/strands-py/src/strands/hooks/events.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/hooks/events.py)
 - [harness-sdk/strands-py/src/strands/types/agent.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py)

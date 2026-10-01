@@ -1,4 +1,4 @@
-A `BidiAgent` session is shaped differently from a request/response agent: one connection spans multiple model responses, tool calls, and possibly reconnects, and a response can end because the user barged in rather than because the model finished. This page covers the traces, metrics, and logs specific to bidirectional streaming. For the tracing, metrics, and logging concepts shared by every Strands agent, see [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md), [Metrics](/docs/user-guide/sdk/observability-evaluation/metrics/index.md), and [Logs](/docs/user-guide/sdk/observability-evaluation/logs/index.md).
+A `BidiAgent` session is shaped differently from a request/response agent: one connection spans multiple model responses, tool calls, and possibly restarts, and a response can end because the user barged in rather than because the model finished. This page covers the traces, metrics, and logs specific to bidirectional streaming. For the tracing, metrics, and logging concepts shared by every Strands agent, see [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md), [Metrics](/docs/user-guide/sdk/observability-evaluation/metrics/index.md), and [Logs](/docs/user-guide/sdk/observability-evaluation/logs/index.md).
 
 ## Enabling tracing
 
@@ -15,9 +15,9 @@ pip install 'strands-agents[bidi,otel]'
 ```python
 import asyncio
 
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.types import BidiConnectionStartEvent
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi.agent import BidiAgent
+from strands.bidi.types import BidiConnectionStartEvent
+from strands.bidi.models import BedrockNovaSonicModel
 from strands.telemetry import StrandsTelemetry
 
 strands_telemetry = StrandsTelemetry()
@@ -78,7 +78,7 @@ flowchart TB
 | `bidi_connect` | Establishing the model connection |
 | `bidi_response` | One response from the model |
 | `execute_tool` | One tool call |
-| `bidi_connection_restart` | A reconnect, fired proactively by the reconnect timer or reactively after a provider timeout |
+| `bidi_connection_restart` | A restart, fired proactively by the restart timer or reactively after a provider timeout |
 
 Two span names carry a suffix identifying what they cover: `bidi_session <agent name>` and `execute_tool <tool name>`. The response ID is an attribute rather than part of the span name, which avoids a distinct span name per turn and the aggregation fragmentation that causes in most tracing backends.
 
@@ -116,13 +116,13 @@ Use `bidi_connect` to diagnose slow provider setup. When setup fails, both the c
 
 `gen_ai.server.time_to_first_audio` is recorded once, on the first audio chunk. A text-only response has no such attribute. A model stream error closes the response span with error status. Ending a session mid-turn also closes the response span and is not itself an error.
 
-A restart span covers the reconnect operation. During this interval, sends wait for the connection gate to reopen. Check span status, rather than the presence of `gen_ai.bidi.restart_error_message`, to determine whether the restart succeeded. Status `OK` means the agent reconnected and the session continued, even on a reactive restart that carries the triggering timeout message.
+A restart span covers the swap from the old connection to the new one. During this interval, sends wait for the connection gate to reopen. Check span status, rather than the presence of `gen_ai.bidi.restart_error_message`, to determine whether the restart succeeded. Status `OK` means the agent restarted the connection and the session continued, even on a reactive restart that carries the triggering timeout message.
 
 Tool calls use the same `execute_tool <tool name>` span and attributes as non-streaming agents. See [Tool-Level Attributes](/docs/user-guide/sdk/observability-evaluation/traces/index.md#tool-level-attributes).
 
 ### Barge-in events
 
-A barge-in is recorded as a `bidi_barge_in` event on the session span with a `barge_in.reason` attribute.
+A barge-in is recorded as a `bidi_barge_in` event on the session span.
 
 To count barge-ins, query the session span’s `bidi_barge_in` events. Keeping the event on the session also captures barge-ins between response spans. For detection and playback behavior, see [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md).
 
@@ -164,9 +164,7 @@ Example session span
         {
             "name": "bidi_barge_in",
             "timestamp": "2026-08-10T13:27:28.100000Z",
-            "attributes": {
-                "barge_in.reason": "user_speech"
-            }
+            "attributes": {}
         }
     ],
     "links": []
@@ -209,16 +207,16 @@ For local trace visualization, follow the shared [Local Development Setup](/docs
 
 ## Session metrics
 
-`BidiAgent` does not produce a metrics summary object. Barge-in and reconnect counts come through hooks, token usage comes through the event stream, and response latency is recorded on trace spans.
+`BidiAgent` does not produce a metrics summary object. Barge-in and restart counts come through hooks, token usage comes through the event stream, and response latency is recorded on trace spans.
 
-### Counting barge-ins and reconnects
+### Counting barge-ins and restarts
 
 Register a hook provider to accumulate session health counters:
 
 ```python
 import logging
 
-from strands.experimental.bidi.hooks import (
+from strands.bidi.hooks import (
     BidiAfterConnectionRestartEvent,
     BidiBargeInEvent,
 )
@@ -228,7 +226,7 @@ logger = logging.getLogger(__name__)
 
 
 class SessionStats(HookProvider):
-    """Counts barge-ins and reconnects over the life of a session."""
+    """Counts barge-ins and restarts over the life of a session."""
 
     def __init__(self) -> None:
         self.barge_ins = 0
@@ -247,15 +245,15 @@ class SessionStats(HookProvider):
             self.restarts += 1
 ```
 
-Pass it in with `hooks=[SessionStats()]` when constructing the agent. `BidiAfterConnectionRestartEvent.exception` is `None` when the reconnect succeeded, so the check above counts successful recoveries. A rising barge-in count usually points to responses that run long for a voice interface. A rising reconnect count points to sessions that frequently reach provider timeout conditions. The full list of lifecycle events is in [Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md).
+Pass it in with `hooks=[SessionStats()]` when constructing the agent. `BidiAfterConnectionRestartEvent.exception` is `None` when the restart succeeded, so the check above counts successful recoveries. A rising barge-in count usually points to responses that run long for a voice interface. A rising restart count points to sessions that frequently reach provider timeout conditions. The full list of lifecycle events is in [Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md).
 
 ### Tracking token usage per modality
 
 Traces record aggregate session tokens. The per-modality breakdown is only available on the event stream:
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.types import BidiResponseStopEvent, BidiUsageEvent
+from strands.bidi.agent import BidiAgent
+from strands.bidi.types import BidiResponseStopEvent, BidiUsageEvent
 
 
 async def track_session(agent: BidiAgent) -> None:
@@ -293,7 +291,7 @@ The agent loop logs its own state transitions at `DEBUG`. Enable them to diagnos
 ```python
 import logging
 
-logging.getLogger("strands.experimental.bidi").setLevel(logging.DEBUG)
+logging.getLogger("strands.bidi").setLevel(logging.DEBUG)
 logging.basicConfig(
     format="%(levelname)s | %(name)s | %(message)s",
     handlers=[logging.StreamHandler()],
@@ -303,13 +301,13 @@ logging.basicConfig(
 A session that starts, calls a tool, and stops logs this:
 
 ```plaintext
-DEBUG | strands.experimental.bidi.agent.agent | context_manager=<enter> | starting agent
-DEBUG | strands.experimental.bidi.agent.agent | agent starting
-DEBUG | strands.experimental.bidi.agent.loop | agent loop starting
-DEBUG | strands.experimental.bidi.agent.loop | model task starting
-DEBUG | strands.experimental.bidi.agent.loop | tool_name=<get_weather> | tool execution starting
-DEBUG | strands.experimental.bidi.agent.agent | context_manager=<exit> | stopping agent
-DEBUG | strands.experimental.bidi.agent.loop | agent loop stopping
+DEBUG | strands.bidi.agent.agent | context_manager=<enter> | starting agent
+DEBUG | strands.bidi.agent.agent | agent starting
+DEBUG | strands.bidi.agent.loop | agent loop starting
+DEBUG | strands.bidi.agent.loop | model task starting
+DEBUG | strands.bidi.agent.loop | tool_name=<get_weather> | tool execution starting
+DEBUG | strands.bidi.agent.agent | context_manager=<exit> | stopping agent
+DEBUG | strands.bidi.agent.loop | agent loop stopping
 ```
 
 Audio and transcript chunks are not logged, since a minute of conversation produces thousands of chunks. For log levels, formatters, and handler configuration, see [Logs](/docs/user-guide/sdk/observability-evaluation/logs/index.md).
@@ -356,7 +354,7 @@ Each provider emits one span per response. Usage details vary by provider:
 
 1.  **Monitor time to first audio over session duration.** A long session can be healthy; a slow first audio chunk is user-facing latency.
 2.  **Separate connect latency from response latency.** Use `bidi_connect` to isolate handshake cost from model response time.
-3.  **Track reconnects with hooks.** During a reconnect, sends wait for the connection gate to reopen. Monitor reconnect frequency to find sessions that regularly reach provider timeout conditions.
+3.  **Track restarts with hooks.** During a restart, sends wait for the connection gate to reopen. Monitor restart frequency to find sessions that regularly reach provider timeout conditions.
 4.  **Watch the barge-in rate.** A rising rate of barge-ins often points to responses that are too long for a voice interface.
 5.  **Redact the system prompt in production.** Session spans carry it verbatim unless the unredacted allowlist is configured otherwise.
 6.  **Correlate the modality breakdown with cost.** Audio tokens typically dominate voice session cost, and only the event stream reports them separately from text.
@@ -370,7 +368,7 @@ Each provider emits one span per response. Usage details vary by provider:
 | Session span has no token attributes | The session is still open, or usage was never reported |
 | More response spans than spoken turns | Expected on Bedrock Nova Sonic, one response per content block |
 | `gen_ai.system_instructions` reads `[REDACTED]` | Add it to the unredacted allowlist |
-| Restart span has an error message but status `OK` | The reconnect succeeded; the message is the timeout that triggered it |
+| Restart span has an error message but status `OK` | The restart succeeded; the message is the timeout that triggered it |
 
 ## Next steps
 
@@ -379,18 +377,18 @@ Each provider emits one span per response. Usage details vary by provider:
 -   [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) - Complete guide to bidirectional streaming events
 -   [Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) - Extend agent functionality with hooks
 -   [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) - How barge-in detection works
--   [Python API Reference](/docs/api/python/strands.experimental.bidi.agent) - Complete API documentation
+-   [Python API Reference](/docs/api/python/strands.bidi.agent) - Complete API documentation
 
 ## Related pages
 
 - [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
 - [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
 - [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
+- [Evaluating remote traces](/docs/user-guide/evals-sdk/how-to/trace_providers/index.md) (1 shared tag)
 - [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
 - [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
 - [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Evaluating remote traces](/docs/user-guide/evals-sdk/how-to/trace_providers/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
 - [Metrics](/docs/user-guide/sdk/observability-evaluation/metrics/index.md) (1 shared tag)
 - [Observability](/docs/user-guide/sdk/observability-evaluation/observability/index.md) (1 shared tag)
 
@@ -399,5 +397,5 @@ Each provider emits one span per response. Usage details vary by provider:
 
 ### Python
 
-- [harness-sdk/strands-py/src/strands/experimental/bidi/_telemetry.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/_telemetry.py)
-- [harness-sdk/strands-py/src/strands/experimental/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/agent/loop.py)
+- [harness-sdk/strands-py/src/strands/bidi/_telemetry.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/_telemetry.py)
+- [harness-sdk/strands-py/src/strands/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/agent/loop.py)

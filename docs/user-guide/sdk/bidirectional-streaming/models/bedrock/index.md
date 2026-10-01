@@ -34,10 +34,9 @@ After installing the Bedrock Nova Sonic and local audio extras, create a voice a
 ```python
 import asyncio
 
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.io import AudioIO
-from strands.experimental.bidi.models import BedrockNovaSonicModel
-from strands.experimental.tools import stop
+from strands.bidi.agent import BidiAgent
+from strands.bidi.io import AudioIO
+from strands.bidi.models import BedrockNovaSonicModel
 from strands.vended_tools import notebook
 
 
@@ -47,7 +46,7 @@ async def main() -> None:
         region="us-east-1",
         voice="tiffany",
     )
-    agent = BidiAgent(model=model, tools=[notebook, stop])
+    agent = BidiAgent(model=model, tools=[notebook])
     audio_io = AudioIO()
     await agent.run(inputs=[audio_io.input()], outputs=[audio_io.output()])
 
@@ -85,7 +84,7 @@ export AWS_REGION=your_region_name
 
 ```python
 import boto3
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi.models import BedrockNovaSonicModel
 
 
 boto_session = boto3.Session(
@@ -117,10 +116,10 @@ For more details on this approach, please refer to the [boto3 session docs](http
 | Parameter | Description | Example | Options |
 | --- | --- | --- | --- |
 | `model_id` | Nova Sonic model identifier. | `"amazon.nova-2-sonic-v1:0"` | Nova Sonic model IDs |
-| `audio` | Input and output stream options. | `{"output": {"sample_rate": 24000}}` | [reference](/docs/api/python/strands.experimental.bidi.models#BedrockNovaSonicAudioConfig) |
+| `audio` | Input and output stream options. | `{"output": {"sample_rate": 24000}}` | [reference](/docs/api/python/strands.bidi.models#BedrockNovaSonicAudioConfig) |
 | `voice` | Output voice identifier. Defaults to `"matthew"`. | `"tiffany"` | Nova Sonic voices |
 | `params` | Provider-specific session parameters, such as inference and turn detection configuration. | `{"inferenceConfiguration": {"temperature": 0.7}}` | [`sessionStart` fields](https://docs.aws.amazon.com/nova/latest/nova2-userguide/sonic-input-events.html) |
-| `connection` | Reconnect timing overrides. | `{"auto_reconnect": False}` | [reference](/docs/api/python/strands.experimental.bidi.models#ConnectionConfig) |
+| `connection` | Restart timing overrides. | `{"auto_reconnect": False}` | [reference](/docs/api/python/strands.bidi.models#ConnectionConfig) |
 
 Conversation History Limits
 
@@ -152,7 +151,7 @@ As a reminder, Nova Sonic is only available in us-east-1, us-west-2, eu-north-1,
 
 -   [Nova Sonic](https://docs.aws.amazon.com/nova/latest/nova2-userguide/using-conversational-speech.html)
 -   [Experimental Bedrock Client](https://github.com/aws/aws-sdk-python/tree/develop/clients/aws-sdk-bedrock-runtime)
--   [Python API Reference](/docs/api/python/strands.experimental.bidi.models#BedrockNovaSonicModel)
+-   [Python API Reference](/docs/api/python/strands.bidi.models#BedrockNovaSonicModel)
 
 ## Related pages
 
@@ -172,4 +171,4 @@ As a reminder, Nova Sonic is only available in us-east-1, us-west-2, eu-north-1,
 
 ### Python
 
-- [harness-sdk/strands-py/src/strands/experimental/bidi/models/bedrock.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/models/bedrock.py)
+- [harness-sdk/strands-py/src/strands/bidi/models/bedrock.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/bedrock.py)

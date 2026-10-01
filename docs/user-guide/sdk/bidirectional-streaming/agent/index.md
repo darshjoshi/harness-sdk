@@ -56,9 +56,9 @@ print(result.message)
 
 ```python
 import asyncio
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.io import AudioIO
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi.agent import BidiAgent
+from strands.bidi.io import AudioIO
+from strands.bidi.models import BedrockNovaSonicModel
 
 model = BedrockNovaSonicModel(model_id="amazon.nova-2-sonic-v1:0")
 agent = BidiAgent(model=model, tools=[notebook])
@@ -153,17 +153,19 @@ Dequeues events from internal queue, yields to user code, and continues until st
 
 #### Tool Execution
 
-Tools execute concurrently without blocking the conversation. When a tool is invoked:
+Tools execute concurrently without blocking the conversation. When the model requests a group of tool calls:
 
-1.  The tool use and a dispatch acknowledgement are appended together to conversation history before execution.
-2.  The tool executor streams events as the tool runs.
-3.  The tool use is appended again alongside the actual result, which is sent to the model.
+1.  One assistant message containing the tool uses and one user message containing their dispatch acknowledgements are appended together to conversation history.
+2.  The tool executor streams events for each call as it runs.
+3.  Once all calls finish, the tool uses are repeated in one assistant message, followed by one user message containing their results in request order. The results are sent together to the model.
 
-Each tool use stays adjacent to its result even when conversation continues or tools finish out of order. Both pairs retain the original tool-use ID, and the repeated tool use does not execute again. Dispatch acknowledgements stay in history and are not sent to the model.
+Each grouped tool-use message stays adjacent to its matching result message, even when conversation continues or tools finish out of order. Both exchanges retain the original tool-use IDs, and the repeated tool uses do not execute again. Dispatch acknowledgements stay in history and are not sent to the model.
 
-Tool-result messages identify their purpose in `metadata["custom"]["bidi"]`: `kind` is `tool_dispatch` or `tool_result`, and `tool_use_id` links to the original request.
+Tool-result messages use `metadata["custom"]["bidi"]["kind"]` to distinguish `tool_dispatch` acknowledgements from `tool_result` messages.
 
-The agent loop checks for `request_state["stop_event_loop"]` to trigger graceful shutdown instead of sending tool results back to the model. Any tool can set this flag to stop the conversation. The SDK’s experimental `stop` tool uses this mechanism.
+To let a tool end the conversation, call `tool_context.agent.cancel()`. Cancellation takes effect only after the tool group completes. Requests from other contexts remain pending until then.
+
+See [Graceful shutdown](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md#graceful-shutdown) for a custom tool example.
 
 ### Connection Lifecycle
 
@@ -186,8 +188,8 @@ Configure a `BidiAgent` with a model, tools, a system prompt, and optional conve
 ### Basic Configuration
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi.agent import BidiAgent
+from strands.bidi.models import BedrockNovaSonicModel
 
 model = BedrockNovaSonicModel(model_id="amazon.nova-2-sonic-v1:0")
 
@@ -207,7 +209,7 @@ agent = BidiAgent(
 Each model provider has specific configuration options:
 
 ```python
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi.models import BedrockNovaSonicModel
 
 model = BedrockNovaSonicModel(
     model_id="amazon.nova-2-sonic-v1:0",
@@ -226,7 +228,6 @@ See [Model Providers](/docs/user-guide/sdk/bidirectional-streaming/models/bedroc
 
 -   **[Tools](/docs/user-guide/sdk/tools/index.md)**: Function calling works identically
 -   **[Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md)**: Lifecycle event handling with bidirectional-specific events
--   **[Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md)**: Conversation persistence across sessions
 -   **[Tool Executors](/docs/user-guide/sdk/tools/executors/index.md)**: Concurrent and custom execution patterns
 
 ## Lifecycle Management
@@ -244,8 +245,8 @@ stateDiagram-v2
     Running --> Stopped: stop
     Stopped --> [*]
 
-    Running --> Restarting: Reconnect timer or timeout
-    Restarting --> Running: Reconnected
+    Running --> Restarting: Restart timer or timeout
+    Restarting --> Running: Restarted
 ```
 
 ### State Transitions
@@ -339,7 +340,7 @@ Explicit control with custom error handling and flexible timing.
 Send a list to group text and images into one user message, preserving block order. With a running OpenAI or Gemini agent:
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
+from strands.bidi.agent import BidiAgent
 from strands.types.media import ImageBlock
 
 async def describe_image(agent: BidiAgent, image_bytes: bytes) -> None:
@@ -353,17 +354,17 @@ Lists accept strings, `TextBlock`, `ImageBlock`, and their dictionary forms. Sen
 
 ### Connection Restart
 
-Every provider caps how long a single connection stays open. `BidiAgent` reconnects on two paths, both of which preserve the conversation:
+Every provider caps how long a single connection stays open. `BidiAgent` restarts the connection on two paths, both of which preserve the conversation:
 
--   **Proactive (scheduled)**: a timer fires ahead of the provider’s limit, and the agent reconnects before the connection drops. This is the normal path.
--   **Reactive (timeout)**: if the connection times out first, the agent reconnects after the provider reports the timeout.
+-   **Proactive (scheduled)**: a timer fires ahead of the provider’s limit, and the agent restarts the connection before it drops. This is the normal path.
+-   **Reactive (timeout)**: if the connection times out first, the agent restarts the connection after the provider reports the timeout.
 
 Both paths emit a `BidiConnectionRestartEvent`. Read `event.reason` (`"scheduled"` or `"timeout"`) to tell them apart, and `event.turn_interrupted` to detect when a restart cut an in-progress turn:
 
 ```python
 async for event in agent.receive():
     if isinstance(event, BidiConnectionRestartEvent):
-        print(f"Reconnecting (reason={event.reason})")
+        print(f"Restarting (reason={event.reason})")
         if event.turn_interrupted:
             # The provider replays history as context, but this turn was not answered.
             # Re-prompt or notify the user.
@@ -371,27 +372,27 @@ async for event in agent.receive():
         # Conversation history is preserved; keep processing events normally.
 ```
 
-Ahead of a proactive reconnect, the agent also emits a `BidiConnectionWarningEvent` carrying `time_left_s`, the approximate seconds until the swap. It is informational, useful for surfacing a “reconnecting shortly” hint in a UI. The full event catalog is on the [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) page.
+Ahead of a proactive restart, the agent also emits a `BidiConnectionWarningEvent` carrying `time_left_s`, the approximate seconds until the swap. It is informational, useful for surfacing a “restarting shortly” hint in a UI. The full event catalog is on the [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) page.
 
-The restart sequence: reconnect timer fires (or a timeout is reported) → `BidiConnectionRestartEvent` emitted → sending blocked → hooks invoked → model restarted with history → new receiver task spawned → sending unblocked → conversation continues.
+The restart sequence: restart timer fires (or a timeout is reported) → `BidiConnectionRestartEvent` emitted → sending blocked → hooks invoked → model restarted with history → new receiver task spawned → sending unblocked → conversation continues.
 
-#### Tuning Reconnect Timing
+#### Tuning Restart Timing
 
-Each provider declares its reconnect timing as a `ConnectionConfig`. Override it, or opt out of automatic reconnect with the model’s `connection` argument:
+Each provider declares its restart timing as a `ConnectionConfig`. Override it, or opt out of automatic restart with the model’s `connection` argument:
 
 ```python
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi.models import BedrockNovaSonicModel
 
 model = BedrockNovaSonicModel(
     model_id="amazon.nova-2-sonic-v1:0",
     connection={
-        "restart_after_s": 360,  # Reconnect this many seconds after a connection opens
-        "auto_reconnect": True,  # Set False to disable automatic reconnect
+        "restart_after_s": 360,  # Restart this many seconds after a connection opens
+        "auto_reconnect": True,  # Set False to disable automatic restart
     },
 )
 ```
 
-`restart_after_s` should sit at least ~10 seconds below the provider’s own connection limit, because the reconnect may wait briefly for the current turn to finish before swapping. Setting `auto_reconnect=False` turns off both the proactive timer and reactive reconnect, so the connection closes at the provider’s limit.
+`restart_after_s` should sit at least ~10 seconds below the provider’s own connection limit, because the restart may wait briefly for the current turn to finish before swapping. Setting `auto_reconnect=False` turns off both the proactive timer and reactive restart, so the connection closes at the provider’s limit.
 
 ### Error Handling
 
@@ -414,7 +415,7 @@ finally:
     await agent.stop()
 ```
 
-**Note:** Reconnects are handled automatically, whether scheduled by the reconnect timer or triggered by a timeout. The agent emits `BidiConnectionRestartEvent` when reconnecting.
+**Note:** Restarts are handled automatically, whether scheduled by the restart timer or triggered by a timeout. The agent emits `BidiConnectionRestartEvent` when restarting the connection.
 
 #### Graceful Shutdown
 
@@ -465,7 +466,7 @@ The agent automatically cleans up background tasks, model connections, I/O strea
 -   [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) - Building custom input and output streams
 -   [Model Providers](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) - Provider-specific configuration
 -   [Quickstart](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) - Getting started guide
--   [Python API Reference](/docs/api/python/strands.experimental.bidi.agent) - Complete API documentation
+-   [Python API Reference](/docs/api/python/strands.bidi.agent) - Complete API documentation
 
 ## Related pages
 
@@ -474,17 +475,17 @@ The agent automatically cleans up background tasks, model connections, I/O strea
 - [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
 - [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
 - [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
 - [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
 - [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
 - [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (1 shared tag)
 
 
 ## Implementation
 
 ### Python
 
-- [harness-sdk/strands-py/src/strands/experimental/bidi/agent/agent.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/agent/agent.py)
-- [harness-sdk/strands-py/src/strands/experimental/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/agent/loop.py)
-- [harness-sdk/strands-py/src/strands/experimental/bidi/types/content.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/types/content.py)
+- [harness-sdk/strands-py/src/strands/bidi/agent/agent.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/agent/agent.py)
+- [harness-sdk/strands-py/src/strands/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/agent/loop.py)
+- [harness-sdk/strands-py/src/strands/bidi/types/content.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/types/content.py)

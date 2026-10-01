@@ -1,4 +1,4 @@
-[Strands Labs](https://github.com/strands-labs) is the experimental arm of Strands Agents: open source projects that take the core SDK into new problem spaces. Where the SDK gives you the agent loop, tool use, model providers, and multi-agent patterns, Labs applies that foundation to areas like physical robotics, world models, agentic benchmarking, harness optimization, and real-time audio.
+[Strands Labs](https://github.com/strands-labs) is the experimental arm of Strands Agents: open source projects that take the core SDK into new problem spaces. Where the SDK gives you the agent loop, tool use, model providers, and multi-agent patterns, Labs applies that foundation to areas like physical robotics, world models, agentic benchmarking, harness optimization, real-time audio, and fast decision models.
 
 Labs projects are published to package repositories and work alongside the SDK today. They move faster and cover more surface area than the core SDK, so expect more frequent changes and newer integrations. Some projects graduate into the core SDK or become standalone products; others stay experimental. Each project lives in its own repository under the [strands-labs](https://github.com/strands-labs) organization.
 
@@ -15,6 +15,8 @@ Labs projects are published to package repositories and work alongside the SDK t
 [AI Functions](https://github.com/strands-labs/ai-functions)Python functions evaluated by AI agents. Enforce correctness with runtime post-conditions instead of prompt engineering alone, and compose functions into multi-agent workflows.
 
 [PyWebRTC Audio](https://github.com/strands-labs/pywebrtc-audio)Python bindings for WebRTC audio processing: echo cancellation, noise suppression, gain control, and voice activity detection, with a working Strands BidiAgent integration.
+
+[Strands Decider](https://github.com/strands-labs/strands-decider)A small, fast decision model, or system one model, for agentic workflows. Pick between options or rate on a scale faster than an LLM, with a calibrated confidence on every decision.
 
 ## Contributing
 

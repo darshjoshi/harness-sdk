@@ -27,7 +27,7 @@ Initialize the coordinator.
 **Arguments**:
 
 -   `bindings` - The extraction-configured stores this coordinator manages, each paired with its fully-resolved config.
--   `default_model` - The agent’s model, passed to extractors that do not configure their own.
+-   `default_model` - Model for extractors that do not configure their own (`agent.aux_model` > `agent.model`).
 
 #### record
 

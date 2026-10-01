@@ -58,4 +58,6 @@ Configuration for the built-in LLM risk classifier.
 **Arguments**:
 
 -   `system_prompt` - Risk criteria prompt. Defaults to a general-purpose risk prompt.
--   `model` - Model for risk evaluation. Defaults to the parent agent’s model.
+-   `model` - Model for risk evaluation. Resolution order: this `model` > `agent.aux_model`
+    
+    > `agent.model`.

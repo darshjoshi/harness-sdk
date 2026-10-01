@@ -76,7 +76,7 @@ await agent.invoke('Hello!')
 
 Strands persists the conversation and its state to the underlying storage backend.
 
-In Python, `SnapshotSessionManager` is the recommended manager for new single-agent sessions. `FileSessionManager` and `S3SessionManager` remain supported as the [compatibility path](#storage-backends) for Graph, Swarm, bidirectional streaming, and existing repository-format sessions. TypeScript uses a single `SessionManager` for both.
+In Python, `SnapshotSessionManager` is the recommended manager for new single-agent sessions. `FileSessionManager` and `S3SessionManager` remain supported as the [compatibility path](#storage-backends) for Graph, Swarm, and existing repository-format sessions. TypeScript uses a single `SessionManager` for both.
 
 `FileSessionManager` and `S3SessionManager` remain supported in Python, but use `SnapshotSessionManager` for new single-agent sessions.
 
@@ -255,7 +255,7 @@ session_manager = SnapshotSessionManager(
 agent = Agent(session_manager=session_manager)
 ```
 
-The repository-based managers cover Graph, Swarm, bidirectional streaming, and existing repository-format sessions. They configure storage directly rather than through a `Storage` backend:
+The repository-based managers cover Graph, Swarm, and existing repository-format sessions. They configure storage directly rather than through a `Storage` backend:
 
 | Session Manager | Persistence | Best for |
 | --- | --- | --- |
@@ -765,7 +765,6 @@ When implementing session persistence in your applications, consider these best 
 ## Related pages
 
 - [State Management](/docs/user-guide/sdk/agents/state/index.md) (3 shared tags)
-- [Bidirectional Streaming Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (2 shared tags)
 - [Storage](/docs/user-guide/sdk/storage/index.md) (1 shared tag)
 - [OpenAI Responses API](/docs/user-guide/sdk/model-providers/openai-responses/index.md) (1 shared tag)
 - [Conversation Management](/docs/user-guide/sdk/agents/conversation-management/index.md) (1 shared tag)

@@ -43,7 +43,7 @@ Create a web fetch tool.
 -   `max_bytes` - Maximum response body size in bytes. Responses larger than this are rejected without buffering the entire body. Defaults to 5 MiB.
 -   `max_content_chars` - Maximum characters of extracted content delivered to the model or analyst. Content exceeding this is truncated with a visible marker. Defaults to 50,000.
 -   `client` - Optional `httpx.AsyncClient` to use for requests. When provided, the tool uses it directly and will not close it. When `None`, a new client is created per request with `follow_redirects=True` and httpx’s default timeout (5s).
--   `model` - Optional model for the analyst. Only used when `mode='agentic'`. Resolution order: this model, then the host agent’s model, then `WebFetchError` if neither is available.
+-   `model` - Optional model for the analyst. Only used when `mode='agentic'`. Resolution order: this `model` > `agent.aux_model` > `agent.model` of the host agent; `WebFetchError` if none is available.
 -   `mode` - Extraction mode. Defaults to `agentic`.
 
 **Returns**:

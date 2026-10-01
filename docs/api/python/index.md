@@ -12,6 +12,12 @@
         -   [Null Conversation Manager](/docs/api/python/strands.agent.conversation_manager.null_conversation_manager)
         -   [Sliding Window Conversation Manager](/docs/api/python/strands.agent.conversation_manager.sliding_window_conversation_manager)
         -   [Summarizing Conversation Manager](/docs/api/python/strands.agent.conversation_manager.summarizing_conversation_manager)
+-   **Bidi**
+    -   [Agent](/docs/api/python/strands.bidi.agent)
+    -   [Hooks](/docs/api/python/strands.bidi.hooks)
+    -   [Io](/docs/api/python/strands.bidi.io)
+    -   [Models](/docs/api/python/strands.bidi.models)
+    -   [Types](/docs/api/python/strands.bidi.types)
 -   **Event Loop**
     -   [Event Loop](/docs/api/python/strands.event_loop.event_loop)
     -   [Streaming](/docs/api/python/strands.event_loop.streaming)
@@ -199,13 +205,6 @@
         -   [Web Fetch](/docs/api/python/strands.vended_tools.web_fetch.web_fetch)
 -   **Experimental**
     -   [Agent Config](/docs/api/python/strands.experimental.agent_config)
-    -   **Bidi**
-        -   [Agent](/docs/api/python/strands.experimental.bidi.agent)
-        -   [Hooks](/docs/api/python/strands.experimental.bidi.hooks)
-        -   [Io](/docs/api/python/strands.experimental.bidi.io)
-        -   [Models](/docs/api/python/strands.experimental.bidi.models)
-        -   [Tools](/docs/api/python/strands.experimental.bidi.tools)
-        -   [Types](/docs/api/python/strands.experimental.bidi.types)
     -   **Checkpoint**
         -   [Checkpoint](/docs/api/python/strands.experimental.checkpoint.checkpoint)
     -   **Tools**

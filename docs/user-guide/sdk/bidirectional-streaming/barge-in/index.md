@@ -27,9 +27,9 @@ When using `AudioIO`, barge-ins are handled automatically:
 
 ```python
 import asyncio
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.io import AudioIO
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi.agent import BidiAgent
+from strands.bidi.io import AudioIO
+from strands.bidi.models import BedrockNovaSonicModel
 
 model = BedrockNovaSonicModel(model_id="amazon.nova-2-sonic-v1:0")
 agent = BidiAgent(model=model)
@@ -53,9 +53,9 @@ For custom behavior, process barge-in events manually:
 
 ```python
 import asyncio
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.models import BedrockNovaSonicModel
-from strands.experimental.bidi.types import BidiBargeInEvent
+from strands.bidi.agent import BidiAgent
+from strands.bidi.models import BedrockNovaSonicModel
+from strands.bidi.types import BidiBargeInEvent
 
 model = BedrockNovaSonicModel(model_id="amazon.nova-2-sonic-v1:0")
 agent = BidiAgent(model=model)
@@ -66,7 +66,7 @@ async def main():
 
     async for event in agent.receive():
         if isinstance(event, BidiBargeInEvent):
-            print(f"Barge-in: {event.reason}")
+            print("Barge-in detected")
             # Custom handling:
             # - Update UI to show barge-in
             # - Log analytics
@@ -81,17 +81,15 @@ asyncio.run(main())
 
 ### Key Events
 
-**BidiBargeInEvent** - Emitted when barge-in detected:
-
--   `reason`: `"user_speech"` (most common) or `"error"`
+**BidiBargeInEvent** - Emitted when a barge-in is detected. It carries no fields beyond `type`.
 
 ## Barge-in Hooks
 
 Use hooks to track barge-ins across your application:
 
 ```python
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.hooks import (
+from strands.bidi.agent import BidiAgent
+from strands.bidi.hooks import (
     BidiBargeInEvent as BidiBargeInHookEvent,
 )
 
@@ -101,7 +99,7 @@ class BargeInTracker:
 
     async def on_barge_in(self, event: BidiBargeInHookEvent):
         self.barge_in_count += 1
-        print(f"Barge-in #{self.barge_in_count}: {event.reason}")
+        print(f"Barge-in #{self.barge_in_count}")
 
         # Log to analytics
         # Update UI
@@ -121,7 +119,7 @@ agent = BidiAgent(
 If barge-ins aren’t being detected:
 
 ```python
-from strands.experimental.bidi.models import OpenAIRealtimeModel
+from strands.bidi.models import OpenAIRealtimeModel
 
 # Check VAD configuration (OpenAI)
 model = OpenAIRealtimeModel(
@@ -164,7 +162,7 @@ async def __call__(self, event: BidiOutputEvent):
 If barge-in is detected too easily:
 
 ```python
-from strands.experimental.bidi.models import OpenAIRealtimeModel
+from strands.bidi.models import OpenAIRealtimeModel
 
 # Increase VAD threshold (OpenAI)
 model = OpenAIRealtimeModel(
@@ -192,16 +190,16 @@ model = OpenAIRealtimeModel(
 - [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
 - [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
 - [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
 - [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
 - [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
 - [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (1 shared tag)
 
 
 ## Implementation
 
 ### Python
 
-- [harness-sdk/strands-py/src/strands/experimental/bidi/types/events.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/types/events.py)
-- [harness-sdk/strands-py/src/strands/experimental/bidi/io/audio.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/io/audio.py)
+- [harness-sdk/strands-py/src/strands/bidi/types/events.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/types/events.py)
+- [harness-sdk/strands-py/src/strands/bidi/io/audio.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/io/audio.py)

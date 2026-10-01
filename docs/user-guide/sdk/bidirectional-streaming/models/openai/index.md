@@ -29,10 +29,9 @@ After installing the OpenAI Realtime and local audio extras, create a voice agen
 ```python
 import asyncio
 
-from strands.experimental.bidi.agent import BidiAgent
-from strands.experimental.bidi.io import AudioIO
-from strands.experimental.bidi.models import OpenAIRealtimeModel
-from strands.experimental.tools import stop
+from strands.bidi.agent import BidiAgent
+from strands.bidi.io import AudioIO
+from strands.bidi.models import OpenAIRealtimeModel
 from strands.vended_tools import notebook
 
 
@@ -43,8 +42,7 @@ async def main() -> None:
         voice="coral",
         api_key="<OPENAI_API_KEY>",
     )
-    # stop tool allows user to verbally stop agent execution.
-    agent = BidiAgent(model=model, tools=[notebook, stop])
+    agent = BidiAgent(model=model, tools=[notebook])
 
     audio_io = AudioIO()
     await agent.run(inputs=[audio_io.input()], outputs=[audio_io.output()])
@@ -73,14 +71,14 @@ if __name__ == "__main__":
 | `transcription_model_id` | Required input transcription model identifier. Pass `None` to disable user transcription. | `"gpt-transcribe"` | [GPT-Transcribe](https://developers.openai.com/api/docs/models/gpt-transcribe) |
 | `voice` | Output voice identifier. Defaults to `"alloy"`. | `"coral"` | [Voice options](https://platform.openai.com/docs/guides/realtime-conversations#voice-options) |
 | `params` | OpenAI Realtime session parameters. Audio must remain mono PCM at 24000 Hz. | `{"max_output_tokens": 4096}` | [`session.update`](https://platform.openai.com/docs/api-reference/realtime-client-events/session/update) |
-| `connection` | Reconnect timing overrides. | `{"auto_reconnect": False}` | [reference](/docs/api/python/strands.experimental.bidi.models#ConnectionConfig) |
+| `connection` | Restart timing overrides. | `{"auto_reconnect": False}` | [reference](/docs/api/python/strands.bidi.models#ConnectionConfig) |
 
 ### Additional Provider Options
 
 Use direct options such as `voice` and `transcription_model_id` for common settings, and pass additional OpenAI Realtime options through `params`.
 
 ```python
-from strands.experimental.bidi.models import OpenAIRealtimeModel
+from strands.bidi.models import OpenAIRealtimeModel
 
 model = OpenAIRealtimeModel(
     model_id="gpt-realtime-2.1",
@@ -115,7 +113,7 @@ Set the `OPENAI_API_KEY` environment variable or pass the key through `api_key`.
 
 -   [OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime)
 -   [OpenAI API Reference](https://platform.openai.com/docs/api-reference/realtime)
--   [Python API Reference](/docs/api/python/strands.experimental.bidi.models#OpenAIRealtimeModel)
+-   [Python API Reference](/docs/api/python/strands.bidi.models#OpenAIRealtimeModel)
 
 ## Related pages
 
@@ -125,14 +123,14 @@ Set the `OPENAI_API_KEY` environment variable or pass the key through `api_key`.
 - [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
 - [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
 - [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
 - [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
 - [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (1 shared tag)
 
 
 ## Implementation
 
 ### Python
 
-- [harness-sdk/strands-py/src/strands/experimental/bidi/models/openai.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/experimental/bidi/models/openai.py)
+- [harness-sdk/strands-py/src/strands/bidi/models/openai.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py)

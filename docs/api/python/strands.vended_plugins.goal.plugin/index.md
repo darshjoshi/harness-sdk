@@ -118,7 +118,10 @@ Harmlessly ignored when `goal` is a validator function — no judge is built in 
 
 **Attributes**:
 
--   `model` - Model the judge agent uses. Defaults to the host agent’s model.
+-   `model` - Model the judge agent uses. Resolution order: this `model` > `agent.aux_model`
+    
+    > `agent.model` of the host agent.
+    
 -   `system_prompt` - System prompt for the judge agent. Defaults to JUDGE\_SYSTEM\_PROMPT.
 
 ## GoalLoop
@@ -127,7 +130,7 @@ Harmlessly ignored when `goal` is a validator function — no judge is built in 
 class GoalLoop(Plugin)
 ```
 
-Defined in: [src/strands/vended\_plugins/goal/plugin.py:196](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L196)
+Defined in: [src/strands/vended\_plugins/goal/plugin.py:197](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L197)
 
 Iterative-refinement plugin.
 
@@ -159,7 +162,7 @@ def __init__(
 ) -> None
 ```
 
-Defined in: [src/strands/vended\_plugins/goal/plugin.py:221](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L221)
+Defined in: [src/strands/vended\_plugins/goal/plugin.py:222](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L222)
 
 Initialize the GoalLoop plugin.
 
@@ -180,7 +183,7 @@ Initialize the GoalLoop plugin.
 def name() -> str
 ```
 
-Defined in: [src/strands/vended\_plugins/goal/plugin.py:279](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L279)
+Defined in: [src/strands/vended\_plugins/goal/plugin.py:280](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L280)
 
 Plugin name.
 
@@ -190,7 +193,7 @@ Plugin name.
 def last_result(agent: Agent) -> GoalResult | None
 ```
 
-Defined in: [src/strands/vended\_plugins/goal/plugin.py:283](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L283)
+Defined in: [src/strands/vended\_plugins/goal/plugin.py:284](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L284)
 
 Result of the most recent completed run on `agent`.
 
@@ -202,6 +205,6 @@ Returns None if no run has finished on that agent since this plugin was construc
 def init_agent(agent: Agent) -> None
 ```
 
-Defined in: [src/strands/vended\_plugins/goal/plugin.py:294](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L294)
+Defined in: [src/strands/vended\_plugins/goal/plugin.py:295](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/goal/plugin.py#L295)
 
 Register hooks on the agent. Called by the plugin registry.

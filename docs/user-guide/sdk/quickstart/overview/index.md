@@ -219,7 +219,7 @@ The table below compares feature availability between the Python and TypeScript 
 | **Session management** | [File, S3, repository managers](/docs/user-guide/sdk/agents/session-management/index.md) | ✅ | ✅ |
 | **Observability** | [OpenTelemetry integration](/docs/user-guide/sdk/observability-evaluation/observability/index.md) | ✅ | ✅ |
 | **Steering** | [Agent steering](/docs/user-guide/sdk/agents/interventions/steering/index.md) | ✅ | ✅ |
-| **Experimental** | [Bidirectional streaming](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) | ✅ | ❌ |
+| **Realtime** | [Bidirectional streaming](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) | ✅ | ❌ |
 
 ## Related pages
 

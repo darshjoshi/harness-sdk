@@ -121,7 +121,7 @@ const agent = new Agent({ sessionManager: session })
 (( /tab "TypeScript" ))
 (( /tab "SDK" ))
 
-When a session is active, offloaded tool results (from context management) are kept under the session directory too, so they stay durable across restarts alongside the conversation. Without a session, offloaded artifacts go to a temporary directory that does not outlive the process.
+When a session is active, offloaded tool results (from context management) are kept under the session directory too, so they stay durable across restarts alongside the conversation. Without a session, they stay in memory and do not outlive the process.
 
 ## Sessions are not memory
 
@@ -131,7 +131,7 @@ Sessions and [long-term memory](/docs/user-guide/harness/configure/memory/index.
 
 Both SDKs write session snapshots to local files, but through different classes. The Python SDK uses a `SnapshotSessionManager` backed by `LocalFileStorage`. The TypeScript SDK composes the shared `Storage` abstraction, using a `SessionManager` whose snapshot storage is a file storage under the session directory. Either way the on-disk result is a local session store rooted at the session directory.
 
-To supply your own session manager (for example an S3-backed one), pass it through to the `Agent`; your explicit manager wins over the one Strands harness would build from `session`. For the storage backends, see [storage](/docs/user-guide/sdk/storage/index.md). For the full option list, see the [configuration reference](/docs/user-guide/harness/reference/configuration/index.md).
+To supply your own session manager (for example an S3-backed one), pass it through to the `Agent`; your explicit manager wins over the one Strands harness would build from `session`. Pass `storage` along with it too: without it, offloaded tool results are embedded in every snapshot the manager writes instead of being stored once. For the storage backends, see [storage](/docs/user-guide/sdk/storage/index.md). For the full option list, see the [configuration reference](/docs/user-guide/harness/reference/configuration/index.md).
 
 ## Implementation
 

@@ -29,7 +29,7 @@ Initialize the LLMSteeringHandler.
 
 -   `system_prompt` - System prompt defining steering guidance rules
 -   `prompt_mapper` - Custom prompt mapper for evaluation prompts
--   `model` - Optional model override for steering evaluation
+-   `model` - Model for steering evaluation. Resolution order: this `model` > `agent.aux_model` > `agent.model`.
 -   `context_providers` - List of context providers for populating steering context. Defaults to \[LedgerProvider()\] if None. Pass an empty list to disable context providers.
 
 #### steer\_before\_tool
@@ -39,7 +39,7 @@ async def steer_before_tool(*, agent: Agent, tool_use: ToolUse,
                             **kwargs: Any) -> ToolSteeringAction
 ```
 
-Defined in: [src/strands/vended\_plugins/steering/handlers/llm/llm\_handler.py:65](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/steering/handlers/llm/llm_handler.py#L65)
+Defined in: [src/strands/vended\_plugins/steering/handlers/llm/llm\_handler.py:66](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/vended_plugins/steering/handlers/llm/llm_handler.py#L66)
 
 Provide contextual guidance for tool usage.
 

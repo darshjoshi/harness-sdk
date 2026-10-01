@@ -29,9 +29,9 @@ The smallest real thing this section builds: a `BidiAgent` on a realtime model, 
 ```python
 import asyncio
 
-from strands.experimental.bidi import BidiAgent
-from strands.experimental.bidi.io import AudioIO
-from strands.experimental.bidi.models import BedrockNovaSonicModel
+from strands.bidi import BidiAgent
+from strands.bidi.io import AudioIO
+from strands.bidi.models import BedrockNovaSonicModel
 
 model = BedrockNovaSonicModel(model_id="amazon.nova-2-sonic-v1:0")
 agent = BidiAgent(
@@ -49,7 +49,7 @@ async def main():
 asyncio.run(main())
 ```
 
-Bidirectional streaming is a Python-only experimental feature; install it with `pip install "strands-agents[bidi-all]"`. The [quickstart](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) covers per-provider installs and credentials.
+Bidirectional streaming is available in the Python SDK. Install it with `pip install "strands-agents[bidi-all]"`. The [quickstart](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) covers per-provider installs and credentials.
 
 ## Where to go next
 
@@ -64,8 +64,8 @@ Building for a server rather than a local machine? Read [I/O channels](/docs/use
 - [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
 - [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
 - [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
 - [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
 - [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
 - [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (1 shared tag)

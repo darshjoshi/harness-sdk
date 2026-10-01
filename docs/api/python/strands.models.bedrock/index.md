@@ -154,7 +154,7 @@ async def count_tokens(
         system_prompt_content: list[SystemContentBlock] | None = None) -> int
 ```
 
-Defined in: [src/strands/models/bedrock.py:1245](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1245)
+Defined in: [src/strands/models/bedrock.py:1253](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1253)
 
 Count tokens using Bedrock’s native CountTokens API.
 
@@ -185,7 +185,7 @@ async def stream(messages: Messages,
                  **kwargs: Any) -> AsyncGenerator[StreamEvent, None]
 ```
 
-Defined in: [src/strands/models/bedrock.py:1327](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1327)
+Defined in: [src/strands/models/bedrock.py:1335](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1335)
 
 Stream conversation with the Bedrock model.
 
@@ -217,7 +217,7 @@ def convert_non_streaming_to_streaming(response: dict[str, Any],
                                        **kwargs: Any) -> Iterable[StreamEvent]
 ```
 
-Defined in: [src/strands/models/bedrock.py:1567](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1567)
+Defined in: [src/strands/models/bedrock.py:1575](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1575)
 
 Convert a non-streaming response to the streaming format.
 
@@ -241,7 +241,7 @@ async def structured_output(
         **kwargs: Any) -> AsyncGenerator[dict[str, T | Any], None]
 ```
 
-Defined in: [src/strands/models/bedrock.py:1693](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1693)
+Defined in: [src/strands/models/bedrock.py:1701](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/models/bedrock.py#L1701)
 
 Get structured output from the model.
 

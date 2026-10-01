@@ -2,7 +2,7 @@ Two defaults keep a long conversation coherent and affordable. A model can only 
 
 ## Context management
 
-With `context_manager` on, Strands harness keeps the relevant history in the model’s window, summarizing older turns as the conversation grows so a long task does not overflow the context. It also appends a context offloader: bulky tool results are moved to storage and replaced with a short preview and a reference the agent can follow to pull the full content back when it actually needs it.
+With `context_manager` on, Strands harness keeps the relevant history in the model’s window, summarizing older turns as the conversation grows so a long task does not overflow the context. It also offloads bulky tool results: each is replaced with a short preview and a reference, and the full content stays in the context manager’s stash, where the agent reads it back with the `retrieve_context` tool when it actually needs it.
 
 The option takes `"auto"` (the default), `"agentic"`, or off:
 
@@ -49,9 +49,9 @@ const agent = new Agent({ conversationManager })
 (( /tab "TypeScript" ))
 (( /tab "SDK" ))
 
-`"auto"` and `"agentic"` select the Strands Harness SDK’s context-management strategy; both keep the offloader on. Turning context management off (`False`/`null`, or `off` on the CLI) disables offloading too, so the full history stays in the window and you own the size of it.
+`"auto"` and `"agentic"` select the Strands Harness SDK’s context-management strategy; both offload bulky tool results. Turning context management off (`False`/`null`, or `off` on the CLI) disables offloading too, so the full history stays in the window and you own the size of it.
 
-When a [session](/docs/user-guide/harness/configure/sessions/index.md) is active, offloaded artifacts persist under the session directory; without a session they go to a temporary directory that does not outlive the process. For the underlying mechanisms, see [context management](/docs/user-guide/sdk/context-management/index.md) and the [context offloader](/docs/user-guide/sdk/plugins/context-offloader/index.md).
+When a [session](/docs/user-guide/harness/configure/sessions/index.md) is active, offloaded artifacts persist under the session directory; without a session they stay in memory and do not outlive the process. For the underlying mechanism, see [context management](/docs/user-guide/sdk/context-management/index.md).
 
 ## Prompt caching
 
