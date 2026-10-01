@@ -15508,7 +15508,7 @@ Results produced by the Strands Evals SDK itself can land in the same dashboard.
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (3 shared tags)
 - [TypeScript Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/typescript/index.md) (3 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Amazon Nova](/docs/user-guide/sdk/model-providers/amazon-nova/index.md) (2 shared tags)
 - [Bedrock Knowledge Base Store](/docs/user-guide/sdk/memory/bedrock-knowledge-base/index.md) (2 shared tags)
 - [PII Redaction](/docs/user-guide/sdk/safety-security/pii-redaction/index.md) (2 shared tags)
@@ -15672,7 +15672,7 @@ def task_function():
 - [Observability](/docs/user-guide/sdk/observability-evaluation/observability/index.md) (1 shared tag)
 - [Observe your agent](/docs/user-guide/sdk/observability-evaluation/index.md) (1 shared tag)
 - [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Logging](/docs/user-guide/sdk/observability-evaluation/logs/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)
@@ -16515,7 +16515,7 @@ The returned `TaskOutput` must contain:
 - [Observe your agent](/docs/user-guide/sdk/observability-evaluation/index.md) (1 shared tag)
 - [Task decorator](/docs/user-guide/evals-sdk/how-to/eval_task/index.md) (1 shared tag)
 - [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Logging](/docs/user-guide/sdk/observability-evaluation/logs/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)
@@ -16660,7 +16660,7 @@ You have a running evaluation. From here, a natural path forward:
 - [Strands Shell quickstart](/docs/user-guide/shell/quickstart/index.md) (1 shared tag)
 - [TypeScript Quickstart](/docs/user-guide/sdk/quickstart/typescript/index.md) (1 shared tag)
 - [Red teaming quickstart](/docs/user-guide/evals-sdk/red-teaming/quickstart/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
+- [Build a voice agent](/docs/user-guide/sdk/bidi/quickstart/index.md) (1 shared tag)
 
 Source: https://strandsagents.com/docs/user-guide/evals-sdk/quickstart/index.md
 
@@ -21491,7 +21491,7 @@ If you are moving off another framework rather than starting fresh, the [migrati
 - [Strands Shell quickstart](/docs/user-guide/shell/quickstart/index.md) (1 shared tag)
 - [TypeScript Quickstart](/docs/user-guide/sdk/quickstart/typescript/index.md) (1 shared tag)
 - [Red teaming quickstart](/docs/user-guide/evals-sdk/red-teaming/quickstart/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
+- [Build a voice agent](/docs/user-guide/sdk/bidi/quickstart/index.md) (1 shared tag)
 
 Source: https://strandsagents.com/docs/user-guide/migrate/choosing-an-agent-foundation/index.md
 
@@ -21862,7 +21862,7 @@ Weighing Strands against other frameworks or a hand-written loop instead? See [c
 
 ## Where to go next
 
-Building a feature? Each build guide above takes one task end to end. When you need to look up how a piece works, the **Components** section is the reference underneath the guides: the agent loop, models, state, sessions, hooks, plugins, interventions, and realtime.
+Building a feature? Each build guide above takes one task end to end. When you need to look up how a piece works, the **Components** section is the reference underneath the guides: the agent loop, models, state, sessions, hooks, plugins, interventions, and voice.
 
 Source: https://strandsagents.com/docs/user-guide/sdk/index.md
 
@@ -30007,28 +30007,28 @@ async def main():
 asyncio.run(main())
 ```
 
-Bidirectional streaming is available in the Python SDK. Install it with `pip install "strands-agents[bidi-all]"`. The [quickstart](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) covers per-provider installs and credentials.
+Bidirectional streaming is available in the Python SDK. Install it with `pip install "strands-agents[bidi-all]"`. The [quickstart](/docs/user-guide/sdk/bidi/quickstart/index.md) covers per-provider installs and credentials.
 
 ## Where to go next
 
-New here? Start with the [quickstart](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) to get a voice conversation running, then read [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) to configure tools, prompts, and the connection lifecycle. Pick a [model provider](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) based on the provider you use and the session length you need.
+New here? Start with the [quickstart](/docs/user-guide/sdk/bidi/quickstart/index.md) to get a voice conversation running, then read [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) to configure tools, prompts, and the connection lifecycle. Pick a [model provider](/docs/user-guide/sdk/bidi/models/bedrock/index.md) based on the provider you use and the session length you need.
 
-Building for a server rather than a local machine? Read [I/O channels](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) to replace microphone-and-speaker I/O with your own transport, then [streaming events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) and [barge-ins](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) to drive the conversation from your own event loop.
+Building for a server rather than a local machine? Read [I/O channels](/docs/user-guide/sdk/bidi/io/index.md) to replace microphone-and-speaker I/O with your own transport, then [streaming events](/docs/user-guide/sdk/bidi/events/index.md) and [barge-ins](/docs/user-guide/sdk/bidi/barge-in/index.md) to drive the conversation from your own event loop.
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/index.md
 
 ---
 
@@ -30201,7 +30201,7 @@ Tool-result messages use `metadata["custom"]["bidi"]["kind"]` to distinguish `to
 
 To let a tool end the conversation, call `tool_context.agent.cancel()`. Cancellation takes effect only after the tool group completes. Requests from other contexts remain pending until then.
 
-See [Graceful shutdown](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md#graceful-shutdown) for a custom tool example.
+See [Graceful shutdown](/docs/user-guide/sdk/bidi/quickstart/index.md#graceful-shutdown) for a custom tool example.
 
 ### Connection Lifecycle
 
@@ -30258,12 +30258,12 @@ model = BedrockNovaSonicModel(
 )
 ```
 
-See [Model Providers](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) for provider-specific options.
+See [Model Providers](/docs/user-guide/sdk/bidi/models/bedrock/index.md) for provider-specific options.
 
 `BidiAgent` supports many of the same constructs as `Agent`:
 
 -   **[Tools](/docs/user-guide/sdk/tools/index.md)**: Function calling works identically
--   **[Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md)**: Lifecycle event handling with bidirectional-specific events
+-   **[Hooks](/docs/user-guide/sdk/bidi/hooks/index.md)**: Lifecycle event handling with bidirectional-specific events
 -   **[Tool Executors](/docs/user-guide/sdk/tools/executors/index.md)**: Concurrent and custom execution patterns
 
 ## Lifecycle Management
@@ -30408,7 +30408,7 @@ async for event in agent.receive():
         # Conversation history is preserved; keep processing events normally.
 ```
 
-Ahead of a proactive restart, the agent also emits a `BidiConnectionWarningEvent` carrying `time_left_s`, the approximate seconds until the swap. It is informational, useful for surfacing a “restarting shortly” hint in a UI. The full event catalog is on the [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) page.
+Ahead of a proactive restart, the agent also emits a `BidiConnectionWarningEvent` carrying `time_left_s`, the approximate seconds until the swap. It is informational, useful for surfacing a “restarting shortly” hint in a UI. The full event catalog is on the [Events](/docs/user-guide/sdk/bidi/events/index.md) page.
 
 The restart sequence: restart timer fires (or a timeout is reported) → `BidiConnectionRestartEvent` emitted → sending blocked → hooks invoked → model restarted with history → new receiver task spawned → sending unblocked → conversation continues.
 
@@ -30498,24 +30498,24 @@ The agent automatically cleans up background tasks, model connections, I/O strea
 
 ## Next Steps
 
--   [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) - Complete guide to bidirectional streaming events
--   [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) - Building custom input and output streams
--   [Model Providers](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) - Provider-specific configuration
--   [Quickstart](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) - Getting started guide
+-   [Events](/docs/user-guide/sdk/bidi/events/index.md) - Complete guide to bidirectional streaming events
+-   [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) - Building custom input and output streams
+-   [Model Providers](/docs/user-guide/sdk/bidi/models/bedrock/index.md) - Provider-specific configuration
+-   [Quickstart](/docs/user-guide/sdk/bidi/quickstart/index.md) - Getting started guide
 -   [Python API Reference](/docs/api/python/strands.bidi.agent) - Complete API documentation
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -30526,7 +30526,7 @@ The agent automatically cleans up background tasks, model connections, I/O strea
 - [harness-sdk/strands-py/src/strands/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/agent/loop.py)
 - [harness-sdk/strands-py/src/strands/bidi/types/content.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/types/content.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/agent/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/agent/index.md
 
 ---
 
@@ -30719,16 +30719,16 @@ model = OpenAIRealtimeModel(
 
 ## Related pages
 
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -30738,7 +30738,7 @@ model = OpenAIRealtimeModel(
 - [harness-sdk/strands-py/src/strands/bidi/types/events.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/types/events.py)
 - [harness-sdk/strands-py/src/strands/bidi/io/audio.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/io/audio.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/barge-in/index.md
 
 ---
 
@@ -30905,7 +30905,7 @@ async for event in agent.receive():
         # Connection resumes automatically with full history.
 ```
 
-See [Connection Lifecycle](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md#connection-restart) for more on restart timing.
+See [Connection Lifecycle](/docs/user-guide/sdk/bidi/agent/index.md#connection-restart) for more on restart timing.
 
 #### BidiConnectionWarningEvent
 
@@ -31403,20 +31403,20 @@ asyncio.run(main())
 
 Hook events are a separate concept from streaming events. While streaming events flow through `agent.receive()` during conversations, hook events are callbacks that trigger at specific lifecycle points (like initialization, message added, or barge-in). Hook events allow you to inject custom logic for cross-cutting concerns like logging, analytics, and session persistence without processing the event stream directly.
 
-For details on hook events and usage patterns, see the [Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) documentation.
+For details on hook events and usage patterns, see the [Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) documentation.
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -31431,7 +31431,7 @@ For details on hook events and usage patterns, see the [Hooks](/docs/user-guide/
 - [harness-sdk/strands-py/src/strands/bidi/types/io.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/types/io.py)
 - [harness-sdk/strands-py/src/strands/types/media.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/media.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/events/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/events/index.md
 
 ---
 
@@ -31602,7 +31602,7 @@ Choose hooks according to the boundary you need to observe:
 
 `BidiAgentStopEvent` carries `agent` and uses reverse callback ordering for cleanup.
 
-See [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) for snapshot session manager support.
+See [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) for snapshot session manager support.
 
 `BidiResponseStopEvent` carries `agent` and `response_id`. Hooks run in registration order and finish before the corresponding streaming event reaches the consumer. The hook mirrors model-reported completion: shutdown or a connection failure without a stop event does not emit it.
 
@@ -31740,21 +31740,21 @@ For more guidance on performance, errors, and composition, see the [Hooks docume
 
 ## Next steps
 
--   [Agent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) - Learn about BidiAgent configuration and lifecycle
--   [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) - Complete guide to bidirectional streaming events
+-   [Agent](/docs/user-guide/sdk/bidi/agent/index.md) - Learn about BidiAgent configuration and lifecycle
+-   [Events](/docs/user-guide/sdk/bidi/events/index.md) - Complete guide to bidirectional streaming events
 -   [Python API Reference](/docs/api/python/strands.bidi.agent) - Complete API documentation
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
 - [Build a custom plugin](/docs/user-guide/sdk/plugins/custom-plugins/index.md) (1 shared tag)
 
 
@@ -31768,7 +31768,7 @@ For more guidance on performance, errors, and composition, see the [Hooks docume
 - [harness-sdk/strands-py/src/strands/hooks/events.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/hooks/events.py)
 - [harness-sdk/strands-py/src/strands/types/agent.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/types/agent.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/hooks/index.md
 
 ---
 
@@ -31782,18 +31782,18 @@ For interrupts with `Agent`, see [here](/docs/user-guide/sdk/interrupts/index.md
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/interrupts/index.md
 
 ---
 
@@ -31875,7 +31875,7 @@ async def main():
 asyncio.run(main())
 ```
 
-The `run()` method handles startup, execution, and shutdown for the agent and its I/O streams. Inputs and outputs run concurrently, so you can mix and match implementations. If an I/O task fails, `run()` cancels the remaining tasks, stops the streams, and re-raises the exception. For a tool that lets users end the conversation, see [Graceful shutdown](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md#graceful-shutdown).
+The `run()` method handles startup, execution, and shutdown for the agent and its I/O streams. Inputs and outputs run concurrently, so you can mix and match implementations. If an I/O task fails, `run()` cancels the remaining tasks, stops the streams, and re-raises the exception. For a tool that lets users end the conversation, see [Graceful shutdown](/docs/user-guide/sdk/bidi/quickstart/index.md#graceful-shutdown).
 
 ## Audio I/O
 
@@ -32028,7 +32028,7 @@ Set `OPENAI_API_KEY` before running this example. Press Enter to send a message 
 
 ### Type and Talk
 
-To type and speak in the same conversation, pass a shared `ConsoleIO` to `AudioIO`. This example uses Amazon Nova Sonic. Configure [AWS credentials](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md#configuring-credentials) and install the [audio extras](#audio-io) first:
+To type and speak in the same conversation, pass a shared `ConsoleIO` to `AudioIO`. This example uses Amazon Nova Sonic. Configure [AWS credentials](/docs/user-guide/sdk/bidi/quickstart/index.md#configuring-credentials) and install the [audio extras](#audio-io) first:
 
 ```python
 import asyncio
@@ -32119,16 +32119,16 @@ if __name__ == "__main__":
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -32140,7 +32140,7 @@ if __name__ == "__main__":
 - [harness-sdk/strands-py/src/strands/bidi/io/console/_keyboard.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/io/console/_keyboard.py)
 - [harness-sdk/strands-py/src/strands/bidi/io/audio.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/io/audio.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/io/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/io/index.md
 
 ---
 
@@ -32205,7 +32205,7 @@ if __name__ == "__main__":
 
 ## Cross-Modal Input
 
-Nova Sonic accepts text input at any point during an active voice session, without interrupting or waiting on the audio stream. Send a [text content block](/docs/user-guide/sdk/bidirectional-streaming/events/index.md#text) the same way you would outside of a live conversation:
+Nova Sonic accepts text input at any point during an active voice session, without interrupting or waiting on the audio stream. Send a [text content block](/docs/user-guide/sdk/bidi/events/index.md#text) the same way you would outside of a live conversation:
 
 ```python
 await agent.send({"text": "What's the weather in Seattle?"})
@@ -32275,9 +32275,9 @@ Nova Sonic caps conversation history passed via `messages` at 50KB per message a
 
 ## Connection Restart
 
-Nova Sonic keeps a single connection open for about 8 minutes. Before the connection reaches that limit, `BidiAgent` restarts it and replays the conversation history into the new connection, so the conversation continues without a break. The agent emits a [`BidiConnectionRestartEvent`](/docs/user-guide/sdk/bidirectional-streaming/events/index.md#bidiconnectionrestartevent) when this happens; treat it as informational rather than an error.
+Nova Sonic keeps a single connection open for about 8 minutes. Before the connection reaches that limit, `BidiAgent` restarts it and replays the conversation history into the new connection, so the conversation continues without a break. The agent emits a [`BidiConnectionRestartEvent`](/docs/user-guide/sdk/bidi/events/index.md#bidiconnectionrestartevent) when this happens; treat it as informational rather than an error.
 
-See [Connection Restart](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md#connection-restart) for the full lifecycle.
+See [Connection Restart](/docs/user-guide/sdk/bidi/agent/index.md#connection-restart) for the full lifecycle.
 
 ## Troubleshooting
 
@@ -32310,9 +32310,9 @@ As a reminder, Nova Sonic is only available in us-east-1, us-west-2, eu-north-1,
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (2 shared tags)
 - [TypeScript Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/typescript/index.md) (2 shared tags)
 - [AgentCore evaluations](/docs/user-guide/evals-sdk/how-to/agentcore_evaluation_dashboard/index.md) (2 shared tags)
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -32321,7 +32321,7 @@ As a reminder, Nova Sonic is only available in us-east-1, us-west-2, eu-north-1,
 
 - [harness-sdk/strands-py/src/strands/bidi/models/bedrock.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/bedrock.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/models/bedrock/index.md
 
 ---
 
@@ -32333,7 +32333,7 @@ The [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) lets developer
 -   **Bidirectional Interaction**: The user and the model can provide input and output at the same time.
 -   **Barge-in**: Users can speak during the model’s response, and the model adjusts its response.
 -   **Tool Use and Function Calling**: The API can use external tools to perform actions and get context while maintaining a real-time connection.
--   **Provider Sessions**: Maintains conversation context within a Gemini Live session. For SDK session persistence, see [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md).
+-   **Provider Sessions**: Maintains conversation context within a Gemini Live session. For SDK session persistence, see [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md).
 -   **Secure Authentication**: Uses tokens for secure client-side authentication.
 
 ## Installation
@@ -32418,7 +32418,7 @@ Calling `update_config(params=...)` replaces the entire `params` dictionary. The
 
 ## Session Resumption
 
-For [connection restarts](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md#connection-restart), the provider resumes the same server-side session through Gemini’s [session resumption](https://ai.google.dev/gemini-api/docs/live-session) handle, carrying context across the restart without replaying history. Resumed sessions persist up to 24 hours; after that, create a new `GoogleGeminiLiveModel` instance to continue the conversation.
+For [connection restarts](/docs/user-guide/sdk/bidi/agent/index.md#connection-restart), the provider resumes the same server-side session through Gemini’s [session resumption](https://ai.google.dev/gemini-api/docs/live-session) handle, carrying context across the restart without replaying history. Resumed sessions persist up to 24 hours; after that, create a new `GoogleGeminiLiveModel` instance to continue the conversation.
 
 ## Troubleshooting
 
@@ -32438,16 +32438,16 @@ Set your Google AI API key through `client_args` or the `GOOGLE_API_KEY` environ
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -32456,7 +32456,7 @@ Set your Google AI API key through `client_args` or the `GOOGLE_API_KEY` environ
 
 - [harness-sdk/strands-py/src/strands/bidi/models/google.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/google.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/models/google/index.md
 
 ---
 
@@ -32559,9 +32559,9 @@ Calling `update_config(params=...)` replaces the entire `params` dictionary. The
 
 ## Connection Restart
 
-The OpenAI Realtime API exposes no server-side resume handle, so when a connection nears its time limit, `BidiAgent` restarts it and replays the accumulated conversation history into the new connection. The provider then sends a short system instruction so the model continues in the same language without re-introducing itself. The agent emits a [`BidiConnectionRestartEvent`](/docs/user-guide/sdk/bidirectional-streaming/events/index.md#bidiconnectionrestartevent) when this happens; treat it as informational rather than an error.
+The OpenAI Realtime API exposes no server-side resume handle, so when a connection nears its time limit, `BidiAgent` restarts it and replays the accumulated conversation history into the new connection. The provider then sends a short system instruction so the model continues in the same language without re-introducing itself. The agent emits a [`BidiConnectionRestartEvent`](/docs/user-guide/sdk/bidi/events/index.md#bidiconnectionrestartevent) when this happens; treat it as informational rather than an error.
 
-Set `timeout_s` in the client config to control when the client-side timeout fires ahead of OpenAI’s session limit (see the table above). For the full lifecycle, see [Connection Restart](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md#connection-restart).
+Set `timeout_s` in the client config to control when the client-side timeout fires ahead of OpenAI’s session limit (see the table above). For the full lifecycle, see [Connection Restart](/docs/user-guide/sdk/bidi/agent/index.md#connection-restart).
 
 ## Troubleshooting
 
@@ -32581,16 +32581,16 @@ Set the `OPENAI_API_KEY` environment variable or pass the key through `api_key`.
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [Session Management](/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [Session Management](/docs/user-guide/sdk/bidi/session-management/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -32599,7 +32599,7 @@ Set the `OPENAI_API_KEY` environment variable or pass the key through `api_key`.
 
 - [harness-sdk/strands-py/src/strands/bidi/models/openai.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/models/openai/index.md
 
 ---
 
@@ -32731,7 +32731,7 @@ Tool calls use the same `execute_tool <tool name>` span and attributes as non-st
 
 A barge-in is recorded as a `bidi_barge_in` event on the session span.
 
-To count barge-ins, query the session span’s `bidi_barge_in` events. Keeping the event on the session also captures barge-ins between response spans. For detection and playback behavior, see [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md).
+To count barge-ins, query the session span’s `bidi_barge_in` events. Keeping the event on the session also captures barge-ins between response spans. For detection and playback behavior, see [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md).
 
 ## Inspecting spans locally
 
@@ -32852,7 +32852,7 @@ class SessionStats(HookProvider):
             self.restarts += 1
 ```
 
-Pass it in with `hooks=[SessionStats()]` when constructing the agent. `BidiAfterConnectionRestartEvent.exception` is `None` when the restart succeeded, so the check above counts successful recoveries. A rising barge-in count usually points to responses that run long for a voice interface. A rising restart count points to sessions that frequently reach provider timeout conditions. The full list of lifecycle events is in [Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md).
+Pass it in with `hooks=[SessionStats()]` when constructing the agent. `BidiAfterConnectionRestartEvent.exception` is `None` when the restart succeeded, so the check above counts successful recoveries. A rising barge-in count usually points to responses that run long for a voice interface. A rising restart count points to sessions that frequently reach provider timeout conditions. The full list of lifecycle events is in [Hooks](/docs/user-guide/sdk/bidi/hooks/index.md).
 
 ### Tracking token usage per modality
 
@@ -32889,7 +32889,7 @@ input=120 output=64 total=184
 response resp_01 ended
 ```
 
-`modality_details` is an empty list when the provider does not report a breakdown, so the loop above is safe on every provider. See [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) for the full event reference.
+`modality_details` is an empty list when the provider does not report a breakdown, so the loop above is safe on every provider. See [Events](/docs/user-guide/sdk/bidi/events/index.md) for the full event reference.
 
 ## Logging
 
@@ -32981,21 +32981,21 @@ Each provider emits one span per response. Usage details vary by provider:
 
 -   [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md) - Exporters and visualization
 -   [Logs](/docs/user-guide/sdk/observability-evaluation/logs/index.md) - Log levels and handler configuration
--   [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) - Complete guide to bidirectional streaming events
--   [Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) - Extend agent functionality with hooks
--   [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) - How barge-in detection works
+-   [Events](/docs/user-guide/sdk/bidi/events/index.md) - Complete guide to bidirectional streaming events
+-   [Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) - Extend agent functionality with hooks
+-   [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) - How barge-in detection works
 -   [Python API Reference](/docs/api/python/strands.bidi.agent) - Complete API documentation
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
 - [Evaluating remote traces](/docs/user-guide/evals-sdk/how-to/trace_providers/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
 - [Metrics](/docs/user-guide/sdk/observability-evaluation/metrics/index.md) (1 shared tag)
 - [Observability](/docs/user-guide/sdk/observability-evaluation/observability/index.md) (1 shared tag)
 
@@ -33007,7 +33007,7 @@ Each provider emits one span per response. Usage details vary by provider:
 - [harness-sdk/strands-py/src/strands/bidi/_telemetry.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/_telemetry.py)
 - [harness-sdk/strands-py/src/strands/bidi/agent/loop.py](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/agent/loop.py)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/observability/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/observability/index.md
 
 ---
 
@@ -33075,7 +33075,7 @@ pip install "strands-agents[bidi-google,bidi-io]"
 
 Server-Side Deployments
 
-The `bidi-pyaudio` extra provides PyAudio for direct microphone and speaker access. The `bidi-io` extra provides terminal text input and transcript rendering. For server deployments where clients handle audio I/O, omit `bidi-pyaudio` and implement custom handlers using the `InputStream` and `OutputStream` protocols. See [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) for details.
+The `bidi-pyaudio` extra provides PyAudio for direct microphone and speaker access. The `bidi-io` extra provides terminal text input and transcript rendering. For server deployments where clients handle audio I/O, omit `bidi-pyaudio` and implement custom handlers using the `InputStream` and `OutputStream` protocols. See [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) for details.
 
 ### Platform-Specific Audio Setup
 
@@ -33275,9 +33275,9 @@ The agent automatically determines when to use tools and executes them concurren
 
 Strands supports three bidirectional streaming providers:
 
--   **[Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md)** - Amazon’s bidirectional streaming model via AWS Bedrock
--   **[OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md)** - OpenAI’s Realtime API for voice conversations\\
--   **[Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md)** - Google’s multimodal streaming API
+-   **[Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md)** - Amazon’s bidirectional streaming model via AWS Bedrock
+-   **[OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md)** - OpenAI’s Realtime API for voice conversations\\
+-   **[Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md)** - Google’s multimodal streaming API
 
 Each provider has different features, timeout limits, and audio quality. See the individual provider documentation for detailed configuration options.
 
@@ -33480,7 +33480,7 @@ pip install "strands-agents[bidi,bidi-pyaudio,bidi-aec]"
 audio_io = AudioIO(audio_processor=True)
 ```
 
-See [Audio Processing](/docs/user-guide/sdk/bidirectional-streaming/io/index.md#audio-processing) for the available options.
+See [Audio Processing](/docs/user-guide/sdk/bidi/io/index.md#audio-processing) for the available options.
 
 ### No Audio Output
 
@@ -33541,13 +33541,13 @@ For longer sessions on a single connection, OpenAI Realtime allows a larger conn
 
 ## Next Steps
 
--   [Agent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) - Deep dive into BidiAgent configuration and lifecycle
--   [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) - Complete guide to bidirectional streaming events
--   [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) - Understanding and customizing input and output streams
+-   [Agent](/docs/user-guide/sdk/bidi/agent/index.md) - Deep dive into BidiAgent configuration and lifecycle
+-   [Events](/docs/user-guide/sdk/bidi/events/index.md) - Complete guide to bidirectional streaming events
+-   [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) - Understanding and customizing input and output streams
 -   **Model Providers:**
-    -   [Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) - Amazon Bedrock’s bidirectional streaming model
-    -   [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) - OpenAI’s Realtime API
-    -   [Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) - Google’s Gemini Live API
+    -   [Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) - Amazon Bedrock’s bidirectional streaming model
+    -   [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) - OpenAI’s Realtime API
+    -   [Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) - Google’s Gemini Live API
 -   [Python API Reference](/docs/api/python/strands.bidi.agent) - Complete API documentation
 
 ## Related pages
@@ -33558,12 +33558,12 @@ For longer sessions on a single connection, OpenAI Realtime allows a larger conn
 - [Strands evaluation quickstart](/docs/user-guide/evals-sdk/quickstart/index.md) (1 shared tag)
 - [Strands Shell quickstart](/docs/user-guide/shell/quickstart/index.md) (1 shared tag)
 - [TypeScript Quickstart](/docs/user-guide/sdk/quickstart/typescript/index.md) (1 shared tag)
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/quickstart/index.md
 
 ---
 
@@ -33577,18 +33577,18 @@ For snapshot session management with `Agent`, see [here](/docs/user-guide/sdk/ag
 
 ## Related pages
 
-- [Barge-in](/docs/user-guide/sdk/bidirectional-streaming/barge-in/index.md) (1 shared tag)
-- [BidiAgent](/docs/user-guide/sdk/bidirectional-streaming/agent/index.md) (1 shared tag)
-- [Build a realtime voice agent](/docs/user-guide/sdk/bidirectional-streaming/index.md) (1 shared tag)
-- [Events](/docs/user-guide/sdk/bidirectional-streaming/events/index.md) (1 shared tag)
-- [Google Gemini Live](/docs/user-guide/sdk/bidirectional-streaming/models/google/index.md) (1 shared tag)
-- [I/O Streams](/docs/user-guide/sdk/bidirectional-streaming/io/index.md) (1 shared tag)
-- [Interrupts](/docs/user-guide/sdk/bidirectional-streaming/interrupts/index.md) (1 shared tag)
-- [OpenAI Realtime](/docs/user-guide/sdk/bidirectional-streaming/models/openai/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Barge-in](/docs/user-guide/sdk/bidi/barge-in/index.md) (1 shared tag)
+- [BidiAgent](/docs/user-guide/sdk/bidi/agent/index.md) (1 shared tag)
+- [Build a realtime voice agent](/docs/user-guide/sdk/bidi/index.md) (1 shared tag)
+- [Events](/docs/user-guide/sdk/bidi/events/index.md) (1 shared tag)
+- [Google Gemini Live](/docs/user-guide/sdk/bidi/models/google/index.md) (1 shared tag)
+- [I/O Streams](/docs/user-guide/sdk/bidi/io/index.md) (1 shared tag)
+- [Interrupts](/docs/user-guide/sdk/bidi/interrupts/index.md) (1 shared tag)
+- [OpenAI Realtime](/docs/user-guide/sdk/bidi/models/openai/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
-Source: https://strandsagents.com/docs/user-guide/sdk/bidirectional-streaming/session-management/index.md
+Source: https://strandsagents.com/docs/user-guide/sdk/bidi/session-management/index.md
 
 ---
 
@@ -36103,7 +36103,7 @@ Pick the language your agent is written in to continue:
 - [Deploying Strands Agents SDK Agents to AWS Fargate](/docs/user-guide/sdk/deploy/deploy_to_aws_fargate/index.md) (2 shared tags)
 - [Deploying Strands Agents SDK Agents to AWS Lambda](/docs/user-guide/sdk/deploy/deploy_to_aws_lambda/index.md) (2 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 
 Source: https://strandsagents.com/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/index.md
 
@@ -36806,7 +36806,7 @@ For more supported headers details, please check [Bedrock AgentCore Runtime Obse
 - [Deploying Strands Agents SDK Agents to AWS Fargate](/docs/user-guide/sdk/deploy/deploy_to_aws_fargate/index.md) (2 shared tags)
 - [Deploying Strands Agents SDK Agents to AWS Lambda](/docs/user-guide/sdk/deploy/deploy_to_aws_lambda/index.md) (2 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 
 Source: https://strandsagents.com/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md
 
@@ -37557,7 +37557,7 @@ aws logs tail /aws/bedrock-agentcore/runtimes/my-agent-service-XXXXXXXXXX-DEFAUL
 - [Deploying Strands Agents SDK Agents to AWS Fargate](/docs/user-guide/sdk/deploy/deploy_to_aws_fargate/index.md) (2 shared tags)
 - [Deploying Strands Agents SDK Agents to AWS Lambda](/docs/user-guide/sdk/deploy/deploy_to_aws_lambda/index.md) (2 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 
 Source: https://strandsagents.com/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/typescript/index.md
 
@@ -41291,7 +41291,7 @@ If the data source has ACL awareness enabled and no `access_control_list``access
 ## Related pages
 
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Amazon Nova](/docs/user-guide/sdk/model-providers/amazon-nova/index.md) (2 shared tags)
 - [Deploying Strands Agents to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/index.md) (2 shared tags)
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (2 shared tags)
@@ -43483,7 +43483,7 @@ const agent = new Agent({ model: bedrockModel })
 
 - [Amazon Nova](/docs/user-guide/sdk/model-providers/amazon-nova/index.md) (3 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (3 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Bedrock Knowledge Base Store](/docs/user-guide/sdk/memory/bedrock-knowledge-base/index.md) (2 shared tags)
 - [Deploying Strands Agents to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/index.md) (2 shared tags)
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (2 shared tags)
@@ -43992,7 +43992,7 @@ model = NovaAPIModel(
 
 - [Amazon Bedrock](/docs/user-guide/sdk/model-providers/amazon-bedrock/index.md) (3 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Bedrock Knowledge Base Store](/docs/user-guide/sdk/memory/bedrock-knowledge-base/index.md) (2 shared tags)
 - [Deploying Strands Agents to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/index.md) (2 shared tags)
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (2 shared tags)
@@ -52071,7 +52071,7 @@ Watching an agent tells you what it did; measuring quality tells you whether it 
 - [Observability](/docs/user-guide/sdk/observability-evaluation/observability/index.md) (1 shared tag)
 - [Task decorator](/docs/user-guide/evals-sdk/how-to/eval_task/index.md) (1 shared tag)
 - [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Logging](/docs/user-guide/sdk/observability-evaluation/logs/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)
@@ -52368,7 +52368,7 @@ configureLogging(customLogger)
 - [Observe your agent](/docs/user-guide/sdk/observability-evaluation/index.md) (1 shared tag)
 - [Task decorator](/docs/user-guide/evals-sdk/how-to/eval_task/index.md) (1 shared tag)
 - [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)
 
@@ -52738,7 +52738,7 @@ Traces are separate from `AgentMetrics` and are accessed via `result.traces`. `A
 - [Observe your agent](/docs/user-guide/sdk/observability-evaluation/index.md) (1 shared tag)
 - [Task decorator](/docs/user-guide/evals-sdk/how-to/eval_task/index.md) (1 shared tag)
 - [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Logging](/docs/user-guide/sdk/observability-evaluation/logs/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)
@@ -52855,7 +52855,7 @@ Effective observability is crucial for developing agents that reliably complete 
 - [Observe your agent](/docs/user-guide/sdk/observability-evaluation/index.md) (1 shared tag)
 - [Task decorator](/docs/user-guide/evals-sdk/how-to/eval_task/index.md) (1 shared tag)
 - [Traces](/docs/user-guide/sdk/observability-evaluation/traces/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Logging](/docs/user-guide/sdk/observability-evaluation/logs/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)
@@ -53481,7 +53481,7 @@ Any OpenTelemetry-compatible backend works the same way: Strands does not requir
 - [Observability](/docs/user-guide/sdk/observability-evaluation/observability/index.md) (1 shared tag)
 - [Observe your agent](/docs/user-guide/sdk/observability-evaluation/index.md) (1 shared tag)
 - [Task decorator](/docs/user-guide/evals-sdk/how-to/eval_task/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Logging](/docs/user-guide/sdk/observability-evaluation/logs/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)
@@ -53563,7 +53563,7 @@ Ready to write your own? [Build a custom plugin](/docs/user-guide/sdk/plugins/cu
 - [Interrupts in Multi-Agent Systems](/docs/user-guide/sdk/interrupts-multi-agent/index.md) (2 shared tags)
 - [Steering](/docs/user-guide/sdk/agents/interventions/steering/index.md) (2 shared tags)
 - [Interventions](/docs/user-guide/sdk/agents/interventions/index.md) (2 shared tags)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -54595,7 +54595,7 @@ class AsyncConfigPlugin implements Plugin {
 - [Interrupts in Multi-Agent Systems](/docs/user-guide/sdk/interrupts-multi-agent/index.md) (2 shared tags)
 - [Steering](/docs/user-guide/sdk/agents/interventions/steering/index.md) (2 shared tags)
 - [Interventions](/docs/user-guide/sdk/agents/interventions/index.md) (2 shared tags)
-- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidirectional-streaming/hooks/index.md) (1 shared tag)
+- [Bidirectional Streaming Hooks](/docs/user-guide/sdk/bidi/hooks/index.md) (1 shared tag)
 
 
 ## Implementation
@@ -55707,7 +55707,7 @@ The table below compares feature availability between the Python and TypeScript 
 | **Session management** | [File, S3, repository managers](/docs/user-guide/sdk/agents/session-management/index.md) | ✅ | ✅ |
 | **Observability** | [OpenTelemetry integration](/docs/user-guide/sdk/observability-evaluation/observability/index.md) | ✅ | ✅ |
 | **Steering** | [Agent steering](/docs/user-guide/sdk/agents/interventions/steering/index.md) | ✅ | ✅ |
-| **Realtime** | [Bidirectional streaming](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) | ✅ | ❌ |
+| **Voice** | [Bidirectional streaming](/docs/user-guide/sdk/bidi/quickstart/index.md) | ✅ | ❌ |
 
 ## Related pages
 
@@ -55717,7 +55717,7 @@ The table below compares feature availability between the Python and TypeScript 
 - [Strands Shell quickstart](/docs/user-guide/shell/quickstart/index.md) (1 shared tag)
 - [TypeScript Quickstart](/docs/user-guide/sdk/quickstart/typescript/index.md) (1 shared tag)
 - [Red teaming quickstart](/docs/user-guide/evals-sdk/red-teaming/quickstart/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
+- [Build a voice agent](/docs/user-guide/sdk/bidi/quickstart/index.md) (1 shared tag)
 
 Source: https://strandsagents.com/docs/user-guide/sdk/quickstart/overview/index.md
 
@@ -56053,7 +56053,7 @@ You have a running agent with a tool. From here:
 - [Strands Shell quickstart](/docs/user-guide/shell/quickstart/index.md) (1 shared tag)
 - [TypeScript Quickstart](/docs/user-guide/sdk/quickstart/typescript/index.md) (1 shared tag)
 - [Red teaming quickstart](/docs/user-guide/evals-sdk/red-teaming/quickstart/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
+- [Build a voice agent](/docs/user-guide/sdk/bidi/quickstart/index.md) (1 shared tag)
 
 Source: https://strandsagents.com/docs/user-guide/sdk/quickstart/python/index.md
 
@@ -56401,7 +56401,7 @@ You have a running agent with a tool. From here:
 - [Strands evaluation quickstart](/docs/user-guide/evals-sdk/quickstart/index.md) (1 shared tag)
 - [Strands Shell quickstart](/docs/user-guide/shell/quickstart/index.md) (1 shared tag)
 - [Red teaming quickstart](/docs/user-guide/evals-sdk/red-teaming/quickstart/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
+- [Build a voice agent](/docs/user-guide/sdk/bidi/quickstart/index.md) (1 shared tag)
 
 Source: https://strandsagents.com/docs/user-guide/sdk/quickstart/typescript/index.md
 
@@ -56639,7 +56639,7 @@ Ollama does not provide native guardrails the way Bedrock does. To constrain an 
 ## Related pages
 
 - [Amazon Bedrock](/docs/user-guide/sdk/model-providers/amazon-bedrock/index.md) (3 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Amazon Nova](/docs/user-guide/sdk/model-providers/amazon-nova/index.md) (2 shared tags)
 - [Bedrock Knowledge Base Store](/docs/user-guide/sdk/memory/bedrock-knowledge-base/index.md) (2 shared tags)
 - [Deploying Strands Agents to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/index.md) (2 shared tags)
@@ -63331,7 +63331,7 @@ You created a sandbox with exactly one host directory visible to it and ran a co
 - [Strands evaluation quickstart](/docs/user-guide/evals-sdk/quickstart/index.md) (1 shared tag)
 - [TypeScript Quickstart](/docs/user-guide/sdk/quickstart/typescript/index.md) (1 shared tag)
 - [Red teaming quickstart](/docs/user-guide/evals-sdk/red-teaming/quickstart/index.md) (1 shared tag)
-- [Build a voice agent](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md) (1 shared tag)
+- [Build a voice agent](/docs/user-guide/sdk/bidi/quickstart/index.md) (1 shared tag)
 
 Source: https://strandsagents.com/docs/user-guide/shell/quickstart/index.md
 
@@ -67641,7 +67641,7 @@ Tags: Physical AI, Robotics, Edge Computing, Best Practices
 
 Agentic AI systems are rapidly expanding beyond the digital world and into the physical, where AI agents perceive, reason, and act in real environments. As AI systems increasingly interact with the physical world through robotics, autonomous vehicles, and smart infrastructure, a fundamental question emerges: how do we build agents that leverage massive cloud compute for complex reasoning while maintaining millisecond-level responsiveness for physical sensing and actuation?
 
-This year has been transformative for agentic AI at AWS. We [launched Strands Agents in May 2025](/blog/introducing-strands-agents/index.md), bringing a simple developer experience and [model-driven approach](/blog/strands-agents-model-driven-approach/index.md) to agent development. In July, [we released version 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) with multi-agent orchestration capabilities and [introduced Amazon Bedrock AgentCore](https://aws.amazon.com/blogs/aws/introducing-amazon-bedrock-agentcore-securely-deploy-and-operate-ai-agents-at-any-scale/) to accelerate AI agents to production at scale. At re:Invent 2025, we expanded Strands with the [TypeScript SDK](https://github.com/strands-agents/sdk-typescript), [evaluations](https://github.com/strands-agents/evals), [bidirectional streaming for voice agents](/docs/user-guide/sdk/bidirectional-streaming/quickstart/index.md), and [steering for guiding agents within boundaries](/docs/user-guide/sdk/agents/interventions/steering/index.md). Today, we’re exploring how these capabilities extend to the edge and physical AI, where agents don’t just process information but work alongside us in the physical world.
+This year has been transformative for agentic AI at AWS. We [launched Strands Agents in May 2025](/blog/introducing-strands-agents/index.md), bringing a simple developer experience and [model-driven approach](/blog/strands-agents-model-driven-approach/index.md) to agent development. In July, [we released version 1.0](https://aws.amazon.com/blogs/opensource/introducing-strands-agents-1-0-production-ready-multi-agent-orchestration-made-simple/) with multi-agent orchestration capabilities and [introduced Amazon Bedrock AgentCore](https://aws.amazon.com/blogs/aws/introducing-amazon-bedrock-agentcore-securely-deploy-and-operate-ai-agents-at-any-scale/) to accelerate AI agents to production at scale. At re:Invent 2025, we expanded Strands with the [TypeScript SDK](https://github.com/strands-agents/sdk-typescript), [evaluations](https://github.com/strands-agents/evals), [bidirectional streaming for voice agents](/docs/user-guide/sdk/bidi/quickstart/index.md), and [steering for guiding agents within boundaries](/docs/user-guide/sdk/agents/interventions/steering/index.md). Today, we’re exploring how these capabilities extend to the edge and physical AI, where agents don’t just process information but work alongside us in the physical world.
 
 ![Robot demonstration](/_astro/edge-ai-1.CyDTvmDC_Z14VGlG.webp)
 

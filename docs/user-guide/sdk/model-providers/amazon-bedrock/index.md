@@ -1091,7 +1091,7 @@ const agent = new Agent({ model: bedrockModel })
 
 - [Amazon Nova](/docs/user-guide/sdk/model-providers/amazon-nova/index.md) (3 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (3 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Bedrock Knowledge Base Store](/docs/user-guide/sdk/memory/bedrock-knowledge-base/index.md) (2 shared tags)
 - [Deploying Strands Agents to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/index.md) (2 shared tags)
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (2 shared tags)

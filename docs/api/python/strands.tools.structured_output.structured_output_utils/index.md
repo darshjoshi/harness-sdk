@@ -7,7 +7,7 @@ def convert_pydantic_to_tool_spec(model: type[BaseModel],
                                   description: str | None = None) -> ToolSpec
 ```
 
-Defined in: [src/strands/tools/structured\_output/structured\_output\_utils.py:260](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/tools/structured_output/structured_output_utils.py#L260)
+Defined in: [src/strands/tools/structured\_output/structured\_output\_utils.py:269](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/tools/structured_output/structured_output_utils.py#L269)
 
 Converts a Pydantic model to a tool description for the Amazon Bedrock Converse API.
 

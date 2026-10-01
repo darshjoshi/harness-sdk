@@ -67,4 +67,4 @@ Weighing Strands against other frameworks or a hand-written loop instead? See [c
 
 ## Where to go next
 
-Building a feature? Each build guide above takes one task end to end. When you need to look up how a piece works, the **Components** section is the reference underneath the guides: the agent loop, models, state, sessions, hooks, plugins, interventions, and realtime.
+Building a feature? Each build guide above takes one task end to end. When you need to look up how a piece works, the **Components** section is the reference underneath the guides: the agent loop, models, state, sessions, hooks, plugins, interventions, and voice.

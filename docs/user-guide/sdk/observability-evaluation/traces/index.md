@@ -612,7 +612,7 @@ Any OpenTelemetry-compatible backend works the same way: Strands does not requir
 - [Observability](/docs/user-guide/sdk/observability-evaluation/observability/index.md) (1 shared tag)
 - [Observe your agent](/docs/user-guide/sdk/observability-evaluation/index.md) (1 shared tag)
 - [Task decorator](/docs/user-guide/evals-sdk/how-to/eval_task/index.md) (1 shared tag)
-- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidirectional-streaming/observability/index.md) (1 shared tag)
+- [Bidirectional Streaming Observability](/docs/user-guide/sdk/bidi/observability/index.md) (1 shared tag)
 - [Logging](/docs/user-guide/sdk/observability-evaluation/logs/index.md) (1 shared tag)
 - [Operating Agents in Production](/docs/user-guide/sdk/deploy/operating-agents-in-production/index.md) (1 shared tag)
 - [Root cause analysis](/docs/user-guide/evals-sdk/detectors/root_cause_analysis/index.md) (1 shared tag)

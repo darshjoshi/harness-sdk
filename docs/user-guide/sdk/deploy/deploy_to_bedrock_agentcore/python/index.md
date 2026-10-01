@@ -693,4 +693,4 @@ For more supported headers details, please check [Bedrock AgentCore Runtime Obse
 - [Deploying Strands Agents SDK Agents to AWS Fargate](/docs/user-guide/sdk/deploy/deploy_to_aws_fargate/index.md) (2 shared tags)
 - [Deploying Strands Agents SDK Agents to AWS Lambda](/docs/user-guide/sdk/deploy/deploy_to_aws_lambda/index.md) (2 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)

@@ -4,7 +4,7 @@ type McpTransport = Omit<Transport, "sessionId"> & {
 };
 ```
 
-Defined in: [src/mcp/client.ts:28](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/mcp/client.ts#L28)
+Defined in: [src/mcp/client.ts:30](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/mcp/client.ts#L30)
 
 Widened transport type that accepts MCP transport implementations without requiring explicit casts.
 
@@ -14,4 +14,4 @@ The `sessionId` member is widened to `string | undefined` so that, under `exactO
 
 | Name | Type | Defined in |
 | --- | --- | --- |
-| `sessionId?` | `string` | [src/mcp/client.ts:28](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/mcp/client.ts#L28) |
+| `sessionId?` | `string` | [src/mcp/client.ts:30](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/mcp/client.ts#L30) |

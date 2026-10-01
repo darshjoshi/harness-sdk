@@ -27,7 +27,7 @@ Results produced by the Strands Evals SDK itself can land in the same dashboard.
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (3 shared tags)
 - [TypeScript Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/typescript/index.md) (3 shared tags)
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Amazon Nova](/docs/user-guide/sdk/model-providers/amazon-nova/index.md) (2 shared tags)
 - [Bedrock Knowledge Base Store](/docs/user-guide/sdk/memory/bedrock-knowledge-base/index.md) (2 shared tags)
 - [PII Redaction](/docs/user-guide/sdk/safety-security/pii-redaction/index.md) (2 shared tags)

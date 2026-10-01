@@ -651,7 +651,7 @@ Receive OpenAI events and convert to Strands TypedEvent format.
 async def send(content: BidiMessage | BidiContentDelta) -> None
 ```
 
-Defined in: [src/strands/bidi/models/openai.py:807](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py#L807)
+Defined in: [src/strands/bidi/models/openai.py:813](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py#L813)
 
 Unified send method for all content types. Sends the given content to OpenAI.
 
@@ -671,7 +671,7 @@ Dispatches to appropriate internal handler based on content type.
 async def stop() -> None
 ```
 
-Defined in: [src/strands/bidi/models/openai.py:913](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py#L913)
+Defined in: [src/strands/bidi/models/openai.py:919](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py#L919)
 
 Close session and cleanup resources.
 
@@ -684,7 +684,7 @@ async def restart(system_prompt: str | None = None,
                   **restart_kwargs: Any) -> None
 ```
 
-Defined in: [src/strands/bidi/models/openai.py:930](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py#L930)
+Defined in: [src/strands/bidi/models/openai.py:936](https://github.com/strands-agents/harness-sdk/blob/main/strands-py/src/strands/bidi/models/openai.py#L936)
 
 Restart by closing the connection and starting a new one, replaying history.
 

@@ -146,7 +146,7 @@ optional continueOnError?: boolean;
 
 Defined in: [src/mcp/config.ts:46](https://github.com/strands-agents/harness-sdk/blob/main/strands-ts/src/mcp/config.ts#L46)
 
-When true, config or connection failures skip this server instead of throwing.
+When true, skip config/connection failures and overlong prefixed names during tool listing with warnings.
 
 ---
 

@@ -402,7 +402,7 @@ If the data source has ACL awareness enabled and no `access_control_list``access
 ## Related pages
 
 - [Guardrails](/docs/user-guide/sdk/safety-security/guardrails/index.md) (2 shared tags)
-- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidirectional-streaming/models/bedrock/index.md) (2 shared tags)
+- [Bedrock Nova Sonic](/docs/user-guide/sdk/bidi/models/bedrock/index.md) (2 shared tags)
 - [Amazon Nova](/docs/user-guide/sdk/model-providers/amazon-nova/index.md) (2 shared tags)
 - [Deploying Strands Agents to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/index.md) (2 shared tags)
 - [Python Deployment to Amazon Bedrock AgentCore Runtime](/docs/user-guide/sdk/deploy/deploy_to_bedrock_agentcore/python/index.md) (2 shared tags)
