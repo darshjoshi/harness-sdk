@@ -797,6 +797,7 @@
 
 ## Blog
 
+- [Introducing Strands Decider 2B: a small, open source, decision model](https://strandsagents.com/blog/introducing-strands-decider/index.md): Strands Decider 2B is a small, open source, decision model optimized for fast experimentation, local development, and innovation.
 - [Introducing Strands harness: frontier performance with 28% lower token cost](https://strandsagents.com/blog/introducing-strands-harness/index.md): Strands harness is a fully assembled, customizable, state-of-the-art agent you run locally or deploy anywhere.
 - [Framework-agnostic evaluation with Strands Evals](https://strandsagents.com/blog/framework-agnostic-evaluation-strands-evals/index.md): Strands Evals supports agents built with Claude Agents SDK, OpenAI Agents, Google ADK, and more. Learn how it achieves compatibility with other frameworks and how you can begin writing cross-framework experiments.
 - [Strands Team AI Usage Reflection](https://strandsagents.com/blog/ai-usage-reflection/index.md): A reflection on the impact that AI has had on the strands agents team, our thoughts about it, and how we intend to address the issues we are facing.
