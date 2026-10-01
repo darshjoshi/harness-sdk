@@ -412,6 +412,8 @@ sidebar:
               - label: "Overview"
                 slug: docs/user-guide/sdk/bidirectional-streaming
               - docs/user-guide/sdk/bidirectional-streaming/agent
+              - docs/user-guide/sdk/bidirectional-streaming/session-management
+              - docs/user-guide/sdk/bidirectional-streaming/interrupts
               - docs/user-guide/sdk/bidirectional-streaming/models/bedrock
               - docs/user-guide/sdk/bidirectional-streaming/models/google
               - docs/user-guide/sdk/bidirectional-streaming/models/openai
@@ -598,6 +600,9 @@ sidebar:
             external: true
           - label: PyWebRTC Audio
             href: https://github.com/strands-labs/pywebrtc-audio
+            external: true
+          - label: Strands Decider
+            href: https://github.com/strands-labs/strands-decider
             external: true
       # Feeds llms.txt lesson listing (src/pages/llms.txt.ts extractLinks); visual sidebar built by route-middleware.
       - label: Learning
