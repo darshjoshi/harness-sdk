@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { getContextWindowLimit } from '../defaults.js'
+import { logger } from '../../logging/logger.js'
 
 describe('getContextWindowLimit', () => {
   it('returns the context window limit for known model IDs across all providers', () => {
@@ -86,5 +87,31 @@ describe('getContextWindowLimit', () => {
     expect(getContextWindowLimit('x.constructor')).toBeUndefined()
     expect(getContextWindowLimit('global.openai.toString')).toBeUndefined()
     expect(getContextWindowLimit('__proto__')).toBeUndefined()
+  })
+
+  describe('debug logging', () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it('logs the stripped id when a prefix strip resolves the model id', () => {
+      const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {})
+
+      getContextWindowLimit('global.openai.gpt-6-astra')
+
+      expect(debugSpy).toHaveBeenCalledOnce()
+      expect(debugSpy).toHaveBeenCalledWith(
+        'model_id=<global.openai.gpt-6-astra>, stripped_id=<gpt-6-astra> | resolved context window limit via prefix strip'
+      )
+    })
+
+    it('does not log for a direct match or an unknown model id', () => {
+      const debugSpy = vi.spyOn(logger, 'debug').mockImplementation(() => {})
+
+      getContextWindowLimit('gpt-6-astra')
+      getContextWindowLimit('us.unknown.model-v1:0')
+
+      expect(debugSpy).not.toHaveBeenCalled()
+    })
   })
 })

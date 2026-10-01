@@ -5,6 +5,8 @@
  * on model configurations to pin behavior across upgrades.
  */
 
+import { logger } from '../logging/logger.js'
+
 export const MODEL_DEFAULTS = {
   anthropic: {
     modelId: 'claude-sonnet-4-6',
@@ -170,8 +172,8 @@ const CONTEXT_WINDOW_LIMITS: Record<string, number> = {
 /**
  * Looks up the context window limit for a model ID.
  *
- * For Bedrock model IDs with prefixes (e.g. `us.anthropic.claude-sonnet-4-6`),
- * prefixes are stripped before lookup.
+ * If the direct lookup fails, region and provider prefixes (e.g. `global.`, `openai.`) are stripped
+ * one at a time, so `global.openai.gpt-6-astra` resolves to the `gpt-6-astra` entry.
  *
  * @param modelId - The model ID to look up
  * @returns The context window limit in tokens, or undefined if not found
@@ -183,7 +185,10 @@ export function getContextWindowLimit(modelId: string): number | undefined {
   let stripped = modelId
   while (stripped.includes('.')) {
     stripped = stripped.substring(stripped.indexOf('.') + 1)
-    if (Object.hasOwn(CONTEXT_WINDOW_LIMITS, stripped)) return CONTEXT_WINDOW_LIMITS[stripped]
+    if (Object.hasOwn(CONTEXT_WINDOW_LIMITS, stripped)) {
+      logger.debug(`model_id=<${modelId}>, stripped_id=<${stripped}> | resolved context window limit via prefix strip`)
+      return CONTEXT_WINDOW_LIMITS[stripped]
+    }
   }
 
   return undefined
