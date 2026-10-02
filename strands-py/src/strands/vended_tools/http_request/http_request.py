@@ -74,7 +74,8 @@ def make_http_request(
             headers: Optional request headers.
             body: Optional request body as a string.
             timeout: Optional per-request timeout in seconds. When a client
-                is provided, capped at the client's configured timeout.
+                is provided, each of the client's timeout phases is capped
+                at this value; when omitted, the client's timeouts apply.
                 When no client is provided, used as-is.
             tool_context: Framework-injected. Not model-visible. Carries the
                 agent so the tool can read its cancel signal mid-flight.
@@ -105,34 +106,38 @@ http_request = make_http_request()
 def _resolve_timeout(
     model_timeout: float | None,
     client: httpx.AsyncClient | None,
-) -> float | None:
+) -> httpx.Timeout | None:
     """Return the effective per-request timeout.
 
-    When a client is provided and has a finite timeout configured, the model
-    may request a shorter timeout but can never exceed the client's cap.
+    When a client is provided, each of its timeout phases (connect, read,
+    write, pool) is kept. The model may request a shorter timeout, which
+    tightens every phase but never extends a finite client limit; phases the
+    client leaves unbounded take the model's timeout.
     When no client is provided (default path), the model's requested timeout
     is used as-is with no upper bound — operators who need a cap should
     supply a client with an explicit timeout.
 
-    Returns ``None`` when no cap applies (no client provided and model
-    didn't supply a timeout, or client has no finite timeout set).
+    Returns ``None`` when the model didn't supply a timeout, so the request
+    uses the client's own configured timeout.
     """
-    client_timeout: float | None = None
-    if client is not None and isinstance(client.timeout, httpx.Timeout):
-        # Use the most relevant phase timeout as the cap. Prefer `read`
-        # (governs response wait), fall back to `connect`, then `write`.
-        for phase in (client.timeout.read, client.timeout.connect, client.timeout.write):
-            if phase is not None:
-                client_timeout = phase
-                break
-
     if model_timeout is None:
-        return client_timeout
+        return None
     if model_timeout <= 0:
         raise HttpRequestError("timeout must be positive")
-    if client_timeout is None:
-        return float(model_timeout)
-    return min(float(model_timeout), client_timeout)
+    requested = float(model_timeout)
+    if client is None:
+        return httpx.Timeout(requested)
+
+    def cap(phase: float | None) -> float:
+        return requested if phase is None else min(requested, phase)
+
+    configured = client.timeout
+    return httpx.Timeout(
+        connect=cap(configured.connect),
+        read=cap(configured.read),
+        write=cap(configured.write),
+        pool=cap(configured.pool),
+    )
 
 
 async def _perform_request(
@@ -141,7 +146,7 @@ async def _perform_request(
     url: str,
     headers: dict[str, str],
     body: str | None,
-    timeout: float | None,
+    timeout: httpx.Timeout | None,
     client: httpx.AsyncClient | None,
     cancel_signal: threading.Event | None = None,
 ) -> HttpRequestOutput:
@@ -163,12 +168,7 @@ async def _perform_request(
         try:
             extensions: dict[str, object] = {}
             if timeout is not None:
-                extensions["timeout"] = {
-                    "connect": timeout,
-                    "read": timeout,
-                    "write": timeout,
-                    "pool": timeout,
-                }
+                extensions["timeout"] = timeout.as_dict()
             request = active_client.build_request(
                 method,
                 url,
