@@ -685,9 +685,7 @@ There is deliberately no built-in, one-call migration command. Every deployment 
 its agents differently — a custom conversation manager, a specific system prompt, several
 agents namespaced under one session, orchestrators with their own topology — and a correct
 migration has to reproduce *that* configuration. The SDK cannot guess it for you, so
-migration is a short script **you** own, built from the pattern below. (A first-class
-migration helper is being considered as a possible future addition; see
-[Looking ahead](#looking-ahead).)
+migration is a short script **you** own, built from the pattern below.
 
 ### Why migrate at all — and why you can't just swap the constructor
 
@@ -888,16 +886,6 @@ topology, shared context, and resume position are preserved — and re-capturing
 the snapshot manager via the same object. If you run Bidi on a message-log manager today,
 treat moving to snapshots as the recommended path and avoid starting new Bidi sessions on
 the legacy managers.
-
-### Looking ahead
-
-This guide intentionally ships as **documentation first**: because every application's agent
-and session configuration differs, the reliable primitive today is a short migration script
-you own and adapt, not a one-size-fits-all command. A first-class migration helper — a
-single call that takes your already-configured `Agent`, `BidiAgent`, `Graph`, or `Swarm`,
-restores it through its legacy manager, and writes the snapshot — is being considered as a
-possible future addition to remove the boilerplate for the common cases. Until then, the
-procedure above is the supported approach.
 
 ## Sessions, agents, and concurrency
 
