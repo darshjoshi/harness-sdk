@@ -693,7 +693,10 @@ Switching to `SnapshotSessionManager` is often just a one-line change:
 
 ```python
 # Before
-agent = Agent(agent_id="my-agent", session_manager=FileSessionManager(session_id="user-123"))
+agent = Agent(
+    agent_id="my-agent",
+    session_manager=FileSessionManager(session_id="user-123"),
+)
 
 # After — a valid switch, but existing history is NOT carried over
 agent = Agent(
