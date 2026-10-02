@@ -675,6 +675,10 @@ Applies to the Python message-log managers (`FileSessionManager`, `S3SessionMana
 migration.
 :::
 
+The message-log managers are deprecated. If you have taken Strands to production on one,
+your sessions are persisted in its format — so moving to `SnapshotSessionManager` means
+migrating that existing data, not just changing the constructor.
+
 Switching to `SnapshotSessionManager` is a one-line change, but it does **not** carry
 existing session data over:
 
@@ -754,7 +758,8 @@ async def migrate_session(session_id: str, *, agent_id: str = "default") -> None
         storage=LocalFileStorage("./snapshot-sessions"),
     )
 
-    # Stop if the target already has a snapshot (restore_snapshot returns True when it exists).
+    # Stop if the target already has a snapshot. restore_snapshot returns True when one
+    # exists (and restores into this throwaway agent, which we then discard).
     if await snapshot.restore_snapshot(Agent(agent_id=agent_id)):
         raise RuntimeError(f"session={session_id!r} agent={agent_id!r} already migrated")
 
