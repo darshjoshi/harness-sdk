@@ -677,9 +677,9 @@ migration.
 
 `SnapshotSessionManager` is the recommended manager for new single-agent sessions, and it
 also covers Graph, Swarm, and `BidiAgent`. If you already have production sessions on a
-message-log manager, this section explains **why a migration is needed** and gives a
-**reference procedure you adapt to your own application** to move those sessions to
-snapshots without starting the conversations over.
+message-log manager, this section explains **what switching does to existing session data**
+and gives a **reference procedure you adapt to your own application** to move those sessions
+to snapshots without starting the conversations over.
 
 There is deliberately no built-in, one-call migration command. Every deployment constructs
 its agents differently — a custom conversation manager, a specific system prompt, several
@@ -687,34 +687,37 @@ agents namespaced under one session, orchestrators with their own topology — a
 migration has to reproduce *that* configuration. The SDK cannot guess it for you, so
 migration is a short script **you** own, built from the pattern below.
 
-### Why migrate at all — and why you can't just swap the constructor
+### What swapping the constructor does — and doesn't — carry over
 
-The natural first instinct is to change one line:
+Switching to `SnapshotSessionManager` is often just a one-line change:
 
 ```python
 # Before
 agent = Agent(agent_id="my-agent", session_manager=FileSessionManager(session_id="user-123"))
 
-# After — does NOT carry your data over
+# After — a valid switch, but existing history is NOT carried over
 agent = Agent(
     agent_id="my-agent",
     session_manager=SnapshotSessionManager("user-123", storage=LocalFileStorage("/data/sessions")),
 )
 ```
 
-**This silently starts the conversation empty.** The two managers use different on-disk
-formats and different key layouts: the message-log managers persist one object per message
-plus a mutable agent record under `session_<id>/`, while `SnapshotSessionManager` persists
-the whole agent as a single versioned [`Snapshot`](./snapshots.mdx) blob under
-`session/<id>/scopes/agent/<agent_id>/snapshots/`. A snapshot manager pointed at an existing
-message-log session — even with the same session ID and storage location — finds no snapshot
-at its own key and begins with no history and no state. Nothing errors; the past
-conversation is simply gone from the agent's view.
+For a **new session**, that is all you need. The important thing to understand is what it
+does to an **existing** session: it does not carry your old data over. The two managers use
+different on-disk formats and different key layouts — the message-log managers persist one
+object per message plus a mutable agent record under `session_<id>/`, while
+`SnapshotSessionManager` persists the whole agent as a single versioned
+[`Snapshot`](./snapshots.mdx) blob under `session/<id>/scopes/agent/<agent_id>/snapshots/`. A
+snapshot manager pointed at an existing message-log session — even with the same session ID
+and storage location — finds no snapshot at its own key and begins with no history and no
+state. Nothing errors; the prior conversation is simply not visible to the new manager (the
+old data is untouched on disk, just not read).
 
-So if you have taken Strands to production on a message-log manager, your users' sessions
-live in that format. Deprecating the message-log managers without moving that data would
-force every user to abandon in-flight conversations or hand-write a migration. That is the
-reason this path exists.
+So the constructor swap is the right move when you are starting fresh, or when you are fine
+leaving the old history behind. If instead you need those existing conversations to continue
+on snapshots, migrate them first with the procedure below. If you have taken Strands to
+production on a message-log manager, your users' sessions live in that format, and migrating
+is what lets them carry forward rather than restart.
 
 A second, subtler reason you cannot convert the files directly: **the message log cannot be
 faithfully reconstructed by reading files alone.** Compaction (a trimming or summarizing
