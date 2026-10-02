@@ -735,6 +735,14 @@ Attach the legacy manager to a throwaway agent (the SDK runs its full restore), 
 that agent through the snapshot manager. Adapt identifiers, storage, conversation manager,
 and system prompt to your application.
 
+:::caution
+This script is a minimal reference, not a drop-in tool. It covers a single local agent with a
+standard configuration. Agents with custom tools, hooks, a non-default model provider, several
+`agent_id`s per session, or a multi-agent topology will need to extend it — build the throwaway
+agent to match your real application exactly (see [What a migration must carry](#what-a-migration-must-carry)),
+or the restored snapshot will not resume identically.
+:::
+
 <Tabs>
 <Tab label="Python">
 
