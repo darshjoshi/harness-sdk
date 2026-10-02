@@ -48,7 +48,7 @@ Set it explicitly, or override the [lookup table](https://github.com/strands-age
 </Tabs>
 
 :::caution[Inaccurate compression with default fallback]
-If <Syntax py="context_window_limit" ts="contextWindowLimit" /> is not set and the SDK cannot match the model ID to the lookup table, the SDK falls back to a default of 200,000 tokens and logs a warning that names the model ID.
+The SDK can use a default limit of 200,000 tokens. This occurs when <Syntax py="context_window_limit" ts="contextWindowLimit" /> is not set and the SDK cannot match the model ID to the lookup table. The SDK then emits a warning that names the model ID.
 
 A wrong limit makes every utilization figure wrong. Compression can then start far earlier than you expect, on a fraction of the real context window. Repeated compression changes the start of the prompt, which also prevents prompt-cache reuse and raises cost. Set the limit explicitly to prevent this.
 :::
