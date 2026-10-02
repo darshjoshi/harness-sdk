@@ -21,6 +21,12 @@ if TYPE_CHECKING:
 _INTERNAL_PREFIX = ".__strands_"
 
 
+def _raise_unless_missing(error: OSError) -> None:
+    """Propagate directory walk errors other than a missing directory."""
+    if not isinstance(error, (FileNotFoundError, NotADirectoryError)):
+        raise error
+
+
 class LocalFileStorage:
     """Persists each key as a file under a base directory.
 
@@ -293,10 +299,7 @@ class LocalFileStorage:
                     break
 
         keys: builtins.list[str] = []
-        if not narrow_dir.exists():
-            return keys
-
-        for dirpath, _, filenames in os.walk(narrow_dir):
+        for dirpath, _, filenames in os.walk(narrow_dir, onerror=_raise_unless_missing):
             for filename in filenames:
                 if filename.startswith(_INTERNAL_PREFIX):
                     continue

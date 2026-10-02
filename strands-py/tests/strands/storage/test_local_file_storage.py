@@ -231,6 +231,45 @@ class TestLocalFileStorage:
         finally:
             os.chmod(os.path.join(str(tmp_path), "key"), 0o644)
 
+    @pytest.mark.asyncio
+    @pytest.mark.skipif(os.name == "nt", reason="Windows does not enforce chmod restrictions")
+    @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root bypasses chmod restrictions")
+    async def test_list_unreadable_directory_raises_storage_error(self, storage, tmp_path):
+        # https://github.com/strands-agents/harness-sdk/issues/4837: unreadable subtrees fail instead of being omitted
+        await storage.write("public/ok.txt", b"visible")
+        await storage.write("private/data.txt", b"saved data")
+        private = tmp_path / "private"
+        os.chmod(private, 0o000)
+        try:
+            with pytest.raises(StorageError):
+                await storage.list()
+            with pytest.raises(StorageError):
+                await storage.search("saved data")
+        finally:
+            os.chmod(private, 0o755)
+        assert await storage.list() == ["private/data.txt", "public/ok.txt"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.skipif(os.name == "nt", reason="Windows does not enforce chmod restrictions")
+    @pytest.mark.skipif(hasattr(os, "geteuid") and os.geteuid() == 0, reason="root bypasses chmod restrictions")
+    async def test_list_inaccessible_base_dir_raises_storage_error(self, tmp_path):
+        # https://github.com/strands-agents/harness-sdk/issues/4837: an inaccessible store does not look empty
+        storage = LocalFileStorage(str(tmp_path / "parent" / "store"))
+        await storage.write("data.txt", b"saved data")
+        parent = tmp_path / "parent"
+        os.chmod(parent, 0o000)
+        try:
+            with pytest.raises(StorageError):
+                await storage.list()
+        finally:
+            os.chmod(parent, 0o755)
+
+    @pytest.mark.asyncio
+    async def test_list_missing_base_dir_returns_empty(self, tmp_path):
+        storage = LocalFileStorage(str(tmp_path / "missing"))
+        assert await storage.list() == []
+        assert await storage.list("a/b/") == []
+
     def test_namespace_preserves_for_sandbox(self, tmp_path):
         from unittest.mock import MagicMock
 
