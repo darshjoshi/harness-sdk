@@ -675,9 +675,9 @@ Applies to the Python message-log managers (`FileSessionManager`, `S3SessionMana
 migration.
 :::
 
-The message-log managers are deprecated. If you have taken Strands to production on one,
-your sessions are persisted in its format — so moving to `SnapshotSessionManager` means
-migrating that existing data, not just changing the constructor.
+`SnapshotSessionManager` is the recommended session manager. If you have taken Strands to
+production on a message-log manager, your sessions are persisted in its format — so moving
+to snapshots means migrating that existing data, not just changing the constructor.
 
 Switching to `SnapshotSessionManager` is a one-line change, but it does **not** carry
 existing session data over:
